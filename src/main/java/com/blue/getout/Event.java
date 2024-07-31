@@ -2,7 +2,7 @@ package com.blue.getout;
 
 import jakarta.persistence.*;
 
-import java.util.Date;
+import java.time.ZonedDateTime;
 
 @Entity
 @Table(name="events")
@@ -19,7 +19,7 @@ public class Event {
     private String location;
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name="time")
-    private Date time;
+    private ZonedDateTime time;
 
     @Column(name="min_people")
     private int min;
@@ -51,11 +51,11 @@ public class Event {
         this.location = location;
     }
 
-    public Date getTime() {
+    public ZonedDateTime getTime() {
         return time;
     }
 
-    public void setTime(Date time) {
+    public void setTime(ZonedDateTime time) {
         this.time = time;
     }
 
