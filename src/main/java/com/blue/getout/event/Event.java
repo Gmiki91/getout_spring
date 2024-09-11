@@ -1,6 +1,6 @@
 package com.blue.getout.event;
 
-import com.blue.getout.userevent.UserEvent;
+import com.blue.getout.user.User;
 import jakarta.persistence.*;
 
 import java.time.ZonedDateTime;
@@ -29,8 +29,8 @@ public class Event {
     @Column(name="max_people")
     private int max;
 
-    @OneToMany(mappedBy = "event",cascade = CascadeType.ALL)
-    private Set<UserEvent> participiants;
+    @ManyToMany(mappedBy = "joinedEvents")
+    private Set<User> participants;
 
     public Event(){
         this.id = String.valueOf(new Random().nextLong());
@@ -83,10 +83,10 @@ public class Event {
         this.max = max;
     }
 
-    public void setParticipiants(Set<UserEvent>participiants){
-        this.participiants=participiants;
+    public void setParticipants(Set<User> participants){
+        this.participants = participants;
     }
-    public Set<UserEvent> getParticipiants(){
-        return participiants;
+    public Set<User> getParticipants(){
+        return participants;
     }
 }

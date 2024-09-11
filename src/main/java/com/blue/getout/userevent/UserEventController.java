@@ -12,6 +12,6 @@ public class UserEventController {
 
     @PostMapping("/join/{userId}/{eventId}")
     public void joinEvent(@PathVariable String userId, @PathVariable String eventId) {
-        userEventService.joinEvent(userId, eventId);
+        userEventService.joinEvent(userId,eventId);
     }
 }

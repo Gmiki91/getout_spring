@@ -1,37 +1,33 @@
 package com.blue.getout.user;
-import com.blue.getout.NameGenerator;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
+import com.blue.getout.NameGenerator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 import java.util.Random;
-@RestController
-@RequestMapping("/users")
-public class UserRestController {
+
+@Service
+public class UserService {
     @Autowired
     private UserRepository userRepository;
     @Autowired
     private NameGenerator nameGenerator;
 
-    @GetMapping("/check/{id}")
-    public User checkUser(@PathVariable String id, HttpServletResponse response) {
+    public ResponseEntity<User> checkUser( String id) {
         if (id != null && !id.equals("0")) {
-            System.out.println("uuid nem nulla!");
+            System.out.println("uuid nem nulla! " + id);
             User result = userRepository.findById(id).orElse(null);
             if (result != null) {
                 System.out.println("User found");
-                return result;
+                return ResponseEntity.ok().body(result);
             }
         }
-        System.out.println("nincs uuid");
+        System.out.println("nincs uuid  "+id);
         String randomName = nameGenerator.generateRandomName();
         User user = new User();
         user.setName(randomName);
         user.setId(String.valueOf(new Random().nextLong()));
         userRepository.save(user);
-        return user;
+        return ResponseEntity.ok().body(user);
     }
 }

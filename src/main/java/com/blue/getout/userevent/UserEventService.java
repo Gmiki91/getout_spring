@@ -9,8 +9,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class UserEventService {
-    @Autowired
-    private UserEventRepository userEventRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -22,7 +20,10 @@ public class UserEventService {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         Event event = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
 
-        UserEvent userEvent = new UserEvent(user, event);
-        userEventRepository.save(userEvent);
+        user.getJoinedEvents().add(event);
+        event.getParticipants().add(user);
+
+        userRepository.save(user);
+        eventRepository.save(event);
     }
 }

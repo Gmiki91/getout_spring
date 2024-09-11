@@ -1,9 +1,7 @@
 package com.blue.getout.user;
-import com.blue.getout.userevent.UserEvent;
+import com.blue.getout.event.Event;
 import jakarta.persistence.*;
-
 import java.util.Set;
-import java.util.UUID;
 
 @Entity
 public class User {
@@ -13,8 +11,13 @@ public class User {
 
     private String name;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private Set<UserEvent> joinedEvents;
+    @ManyToMany
+    @JoinTable(
+            name = "user_event",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "event_id")
+    )
+    private Set<Event> joinedEvents;
 
     public String getId() {
         return id;
@@ -32,11 +35,11 @@ public class User {
         this.name = name;
     }
 
-    public Set<UserEvent> getJoinedEvents() {
+    public Set<Event> getJoinedEvents() {
         return joinedEvents;
     }
 
-    public void setJoinedEvents(Set<UserEvent> joinedEvents) {
+    public void setJoinedEvents(Set<Event> joinedEvents) {
         this.joinedEvents = joinedEvents;
     }
 }
