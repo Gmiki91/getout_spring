@@ -4,7 +4,7 @@ import com.blue.getout.NameGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import java.util.Random;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -19,15 +19,15 @@ public class UserService {
             User result = userRepository.findById(id).orElse(null);
             if (result != null) {
                 System.out.println("User found");
-                return ResponseEntity.ok().body(result);
+                return ResponseEntity.ok(result);
             }
         }
         System.out.println("nincs uuid  "+id);
         String randomName = nameGenerator.generateRandomName();
         User user = new User();
         user.setName(randomName);
-        user.setId(String.valueOf(new Random().nextLong()));
+        user.setId(UUID.randomUUID().toString());
         userRepository.save(user);
-        return ResponseEntity.ok().body(user);
+        return ResponseEntity.ok(user);
     }
 }

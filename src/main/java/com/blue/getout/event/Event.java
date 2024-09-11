@@ -1,11 +1,11 @@
 package com.blue.getout.event;
 
 import com.blue.getout.user.User;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-
 import java.time.ZonedDateTime;
-import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name="events")
@@ -30,10 +30,11 @@ public class Event {
     private int max;
 
     @ManyToMany(mappedBy = "joinedEvents")
+    @JsonBackReference
     private Set<User> participants;
 
     public Event(){
-        this.id = String.valueOf(new Random().nextLong());
+        this.id = UUID.randomUUID().toString();
     }
     public String getId() {
         return id;

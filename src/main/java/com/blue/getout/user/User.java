@@ -1,5 +1,6 @@
 package com.blue.getout.user;
 import com.blue.getout.event.Event;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.util.Set;
 
@@ -17,6 +18,7 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "event_id")
     )
+    @JsonManagedReference
     private Set<Event> joinedEvents;
 
     public String getId() {
