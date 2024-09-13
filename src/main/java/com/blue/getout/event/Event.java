@@ -32,10 +32,24 @@ public class Event {
     @ManyToMany(mappedBy = "joinedEvents")
     @JsonBackReference
     private Set<User> participants;
+    @Column(name="info")
+    private String info;
 
     public Event(){
         this.id = UUID.randomUUID().toString();
     }
+
+    public Event(String title, String location, ZonedDateTime time, int min, int max, Set<User> participants,String info) {
+        this.id = UUID.randomUUID().toString();
+        this.title = title;
+        this.location = location;
+        this.time = time;
+        this.min = min;
+        this.max = max;
+        this.participants = participants;
+        this.info=info;
+    }
+
     public String getId() {
         return id;
     }
@@ -89,5 +103,13 @@ public class Event {
     }
     public Set<User> getParticipants(){
         return participants;
+    }
+
+    public String getInfo() {
+        return info;
+    }
+
+    public void setInfo(String info) {
+        this.info = info;
     }
 }
