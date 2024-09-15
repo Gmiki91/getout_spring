@@ -1,11 +1,12 @@
 package com.blue.getout.userevent;
 
+import com.blue.getout.Mapper;
 import com.blue.getout.event.Event;
+import com.blue.getout.event.EventDTO;
 import com.blue.getout.event.EventData;
 import com.blue.getout.event.EventRepository;
 import com.blue.getout.user.User;
 import com.blue.getout.user.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -15,20 +16,23 @@ import java.util.Set;
 
 @Service
 public class UserEventService {
+    private final EventRepository eventRepository;
+    private final UserRepository userRepository;
+    private final Mapper mapper;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private EventRepository eventRepository;
-
-    public ResponseEntity<Event> createEventWithUserId(EventData eventData){
+    public UserEventService(EventRepository eventRepository, UserRepository userRepository, Mapper mapper){
+        this.userRepository = userRepository;
+        this.eventRepository=eventRepository;
+        this.mapper=mapper;
+    }
+    public ResponseEntity<EventDTO> createEventWithUserId(EventData eventData){
         User user = userRepository.findById(eventData.ownerId()).orElseThrow(() -> new RuntimeException("User not found"));
         Event event =new Event(eventData.title(),eventData.location(), ZonedDateTime.parse(eventData.time()),eventData.min(),eventData.max(), Set.of(user),eventData.info());
         eventRepository.save(event);
         user.getJoinedEvents().add(event);
         userRepository.save(user);
-        return ResponseEntity.ok(event);
+        EventDTO eventDTO = mapper.toDTO(event);
+        return ResponseEntity.ok(eventDTO);
     }
 
     public void joinEvent(String userId, String eventId) {

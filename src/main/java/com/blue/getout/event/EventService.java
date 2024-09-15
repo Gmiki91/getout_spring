@@ -1,22 +1,30 @@
 package com.blue.getout.event;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import com.blue.getout.Mapper;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class EventService {
-    @Autowired
-    EventRepository eventRepository;
+    private final EventRepository eventRepository;
+    private final Mapper mapper;
+    public EventService(EventRepository eventRepository, Mapper mapper){
+        this.eventRepository=eventRepository;
+        this.mapper=mapper;
+    }
+    public Map<String, List<EventDTO>> getEventsForUser(String userId) {
+        List<EventDTO> joinedEvents = eventRepository.findEventsJoinedByUser(userId)
+                .stream()
+                .map(mapper::toDTO)
+                .toList();
+        List<EventDTO> otherEvents = eventRepository.findEventsNotJoinedByUser(userId)
+                .stream()
+                .map(mapper::toDTO)
+                .toList();
 
-    public Map<String, List<Event>> getEventsForUser(String userId) {
-        List<Event> joinedEvents = eventRepository.findEventsJoinedByUser(userId);
-        List<Event> otherEvents = eventRepository.findEventsNotJoinedByUser(userId);
-        Map<String, List<Event>> result = new HashMap<>();
+        Map<String, List<EventDTO>> result = new HashMap<>();
         result.put("joinedEvents", joinedEvents);
         result.put("otherEvents", otherEvents);
         return result;

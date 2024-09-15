@@ -1,20 +1,21 @@
 package com.blue.getout.userevent;
 
-import com.blue.getout.event.Event;
+import com.blue.getout.event.EventDTO;
 import com.blue.getout.event.EventData;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/user-events")
 public class UserEventController {
+    private final UserEventService userEventService;
 
-    @Autowired
-    private UserEventService userEventService;
+    public UserEventController(UserEventService userEventService){
+        this.userEventService = userEventService;
+    }
 
     @PostMapping()
-    public ResponseEntity<Event> createEventWithUserId(@RequestBody EventData event){
+    public ResponseEntity<EventDTO> createEventWithUserId(@RequestBody EventData event){
         return userEventService.createEventWithUserId(event);
     }
     @PostMapping("/{userId}/join/{eventId}")

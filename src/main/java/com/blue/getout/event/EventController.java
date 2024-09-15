@@ -1,6 +1,5 @@
 package com.blue.getout.event;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,12 +9,14 @@ import java.util.Map;
 @RestController
 @RequestMapping("/events")
 public class EventController {
-    @Autowired
-    EventService eventService;
+    private final EventService eventService;
 
+    public EventController(EventService eventService){
+        this.eventService=eventService;
+    }
     @GetMapping("/user/{userId}")
-    public ResponseEntity<Map<String, List<Event>>> getFilteredEvents(@PathVariable String userId){
-        Map<String, List<Event>> result = eventService.getEventsForUser(userId);
+    public ResponseEntity<Map<String, List<EventDTO>>> getFilteredEvents(@PathVariable String userId){
+        Map<String, List<EventDTO>> result = eventService.getEventsForUser(userId);
         return ResponseEntity.ok(result);
     }
     @DeleteMapping("/{eventId}")
