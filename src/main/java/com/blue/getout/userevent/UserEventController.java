@@ -1,7 +1,6 @@
 package com.blue.getout.userevent;
 
 import com.blue.getout.event.EventDTO;
-import com.blue.getout.event.EventData;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,12 +14,12 @@ public class UserEventController {
     }
 
     @PostMapping()
-    public ResponseEntity<EventDTO> createEventWithUserId(@RequestBody EventData event){
+    public ResponseEntity<EventDTO> createEventWithUserId(@RequestBody EventDTO event){
         return userEventService.createEventWithUserId(event);
     }
     @PostMapping("/{userId}/join/{eventId}")
     public  ResponseEntity<EventDTO> joinEvent(@PathVariable String userId, @PathVariable String eventId) {
-       return userEventService.modifyEventParticipation(userId,eventId,true);
+       return userEventService.modifyEventParticipation(eventId,userId,true);
     }
     @DeleteMapping("/{eventId}/participants/{userId}")
     public ResponseEntity<EventDTO> leaveEvent(@PathVariable String eventId, @PathVariable String userId){

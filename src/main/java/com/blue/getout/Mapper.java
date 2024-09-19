@@ -20,11 +20,13 @@ public class Mapper {
                 event.getId(),
                 event.getTitle(),
                 event.getLocation(),
+                event.getLatLng(),
                 event.getTime(),
                 event.getParticipants().stream()
                         .map(user -> new UserDTO(user.getId(), user.getName())).collect(Collectors.toSet()),
                 event.getMin(),
                 event.getMax(),
-                event.getInfo());
+                event.getInfo(),
+                event.getOwner().getId());
     }
 }

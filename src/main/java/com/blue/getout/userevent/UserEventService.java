@@ -3,15 +3,12 @@ package com.blue.getout.userevent;
 import com.blue.getout.Mapper;
 import com.blue.getout.event.Event;
 import com.blue.getout.event.EventDTO;
-import com.blue.getout.event.EventData;
 import com.blue.getout.event.EventRepository;
 import com.blue.getout.user.User;
 import com.blue.getout.user.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.ZonedDateTime;
 import java.util.Set;
 
 @Service
@@ -26,9 +23,9 @@ public class UserEventService {
         this.mapper = mapper;
     }
 
-    public ResponseEntity<EventDTO> createEventWithUserId(EventData eventData) {
+    public ResponseEntity<EventDTO> createEventWithUserId(EventDTO eventData) {
         User user = userRepository.findById(eventData.ownerId()).orElseThrow(() -> new RuntimeException("User not found"));
-        Event event = new Event(eventData.title(), eventData.location(), ZonedDateTime.parse(eventData.time()), eventData.min(), eventData.max(), Set.of(user), eventData.info());
+        Event event = new Event(eventData.title(), eventData.location(),eventData.latLng(), eventData.time(), eventData.min(), eventData.max(), Set.of(user), eventData.info(),user);
         eventRepository.save(event);
         user.getJoinedEvents().add(event);
         userRepository.save(user);
@@ -37,7 +34,7 @@ public class UserEventService {
     }
 
     @Transactional
-    public ResponseEntity<EventDTO> modifyEventParticipation(String userId, String eventId, boolean isJoining) {
+    public ResponseEntity<EventDTO> modifyEventParticipation(String eventId, String userId, boolean isJoining) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         Event event = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
 
