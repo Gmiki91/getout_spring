@@ -19,11 +19,11 @@ public class UserEventController {
         return userEventService.createEventWithUserId(event);
     }
     @PostMapping("/{userId}/join/{eventId}")
-    public void joinEvent(@PathVariable String userId, @PathVariable String eventId) {
-        userEventService.joinEvent(userId,eventId);
+    public  ResponseEntity<EventDTO> joinEvent(@PathVariable String userId, @PathVariable String eventId) {
+       return userEventService.modifyEventParticipation(userId,eventId,true);
     }
     @DeleteMapping("/{eventId}/participants/{userId}")
-    public void leaveEvent(@PathVariable String eventId, @PathVariable String userId){
-        userEventService.leaveEvent(eventId,userId);
+    public ResponseEntity<EventDTO> leaveEvent(@PathVariable String eventId, @PathVariable String userId){
+        return userEventService.modifyEventParticipation(eventId,userId,false);
     }
 }
