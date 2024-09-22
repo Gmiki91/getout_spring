@@ -6,9 +6,14 @@ import com.blue.getout.event.EventDTO;
 import com.blue.getout.event.EventRepository;
 import com.blue.getout.user.User;
 import com.blue.getout.user.UserRepository;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -25,7 +30,7 @@ public class UserEventService {
 
     public ResponseEntity<EventDTO> createEventWithUserId(EventDTO eventData) {
         User user = userRepository.findById(eventData.ownerId()).orElseThrow(() -> new RuntimeException("User not found"));
-        Event event = new Event(eventData.title(), eventData.location(),eventData.latLng(), eventData.time(), eventData.min(), eventData.max(), Set.of(user), eventData.info(),user);
+        Event event = new Event(eventData.title(), eventData.location(), eventData.latLng(), eventData.time(), eventData.min(), eventData.max(), Set.of(user), eventData.info(), user);
         eventRepository.save(event);
         user.getJoinedEvents().add(event);
         userRepository.save(user);
@@ -54,5 +59,36 @@ public class UserEventService {
         } else {
             throw new IllegalArgumentException("The list did not contain the entity.");
         }
+    }
+
+
+    @Transactional
+    public void deleteEvent(String eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+        this.removeEventFromJoinedLists(event);
+        eventRepository.save(event);
+        eventRepository.delete(event);
+    }
+
+    @Transactional
+    @Scheduled(cron = "0 0 0 * * ?") // Runs every day at midnight
+    public void deleteOldEvents() {
+        ZonedDateTime now = ZonedDateTime.now();
+        ZonedDateTime timeLimit = now.minusHours(24);
+        List<Event> oldEvents = eventRepository.findEventsOlderThan(timeLimit);
+        if (!oldEvents.isEmpty()) {
+            oldEvents.forEach(this::removeEventFromJoinedLists);
+            eventRepository.deleteAll(oldEvents);
+        }
+    }
+
+    private void removeEventFromJoinedLists(Event event) {
+        event.getParticipants().forEach(user -> {
+            user.getJoinedEvents().remove(event);
+            userRepository.save(user);
+        });
+        event.getParticipants().clear();
+
     }
 }

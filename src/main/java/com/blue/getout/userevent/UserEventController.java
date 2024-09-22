@@ -25,4 +25,8 @@ public class UserEventController {
     public ResponseEntity<EventDTO> leaveEvent(@PathVariable String eventId, @PathVariable String userId){
         return userEventService.modifyEventParticipation(eventId,userId,false);
     }
+    @DeleteMapping("/events/{eventId}")
+    public void deleteEvent(@PathVariable String eventId){
+        userEventService.deleteEvent(eventId);
+    }
 }

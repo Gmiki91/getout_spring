@@ -1,9 +1,7 @@
 package com.blue.getout.event;
 
 import com.blue.getout.Mapper;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
-
 import java.util.*;
 
 @Service
@@ -28,14 +26,5 @@ public class EventService {
         result.put("joinedEvents", joinedEvents);
         result.put("otherEvents", otherEvents);
         return result;
-    }
-
-    public void deleteEvent(String eventId) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
-        event.getParticipants().forEach(user -> user.getJoinedEvents().remove(event));
-        event.getParticipants().clear();
-        eventRepository.save(event);
-        eventRepository.delete(event);
     }
 }

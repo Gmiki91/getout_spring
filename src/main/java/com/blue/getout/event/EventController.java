@@ -19,8 +19,5 @@ public class EventController {
         Map<String, List<EventDTO>> result = eventService.getEventsForUser(userId);
         return ResponseEntity.ok(result);
     }
-    @DeleteMapping("/{eventId}")
-    public void deleteEvent(@PathVariable String eventId){
-        eventService.deleteEvent(eventId);
-    }
+
 }
