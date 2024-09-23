@@ -15,11 +15,11 @@ public class EventService {
     public Map<String, List<EventDTO>> getEventsForUser(String userId) {
         List<EventDTO> joinedEvents = eventRepository.findEventsJoinedByUser(userId)
                 .stream()
-                .map(mapper::toDTO)
+                .map(mapper::EventEntityToDTO)
                 .toList();
         List<EventDTO> otherEvents = eventRepository.findEventsNotJoinedByUser(userId)
                 .stream()
-                .map(mapper::toDTO)
+                .map(mapper::EventEntityToDTO)
                 .toList();
 
         Map<String, List<EventDTO>> result = new HashMap<>();

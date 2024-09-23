@@ -28,13 +28,14 @@ public class UserEventService {
         this.mapper = mapper;
     }
 
+    @Transactional
     public ResponseEntity<EventDTO> createEventWithUserId(EventDTO eventData) {
         User user = userRepository.findById(eventData.ownerId()).orElseThrow(() -> new RuntimeException("User not found"));
         Event event = new Event(eventData.title(), eventData.location(), eventData.latLng(), eventData.time(), eventData.min(), eventData.max(), Set.of(user), eventData.info(), user);
         eventRepository.save(event);
         user.getJoinedEvents().add(event);
         userRepository.save(user);
-        EventDTO eventDTO = mapper.toDTO(event);
+        EventDTO eventDTO = mapper.EventEntityToDTO(event);
         return ResponseEntity.ok(eventDTO);
     }
 
@@ -54,13 +55,12 @@ public class UserEventService {
 
         if (userModified && eventModified) {
             userRepository.save(user);
-            EventDTO eventDTO = mapper.toDTO(event);
+            EventDTO eventDTO = mapper.EventEntityToDTO(event);
             return ResponseEntity.ok(eventDTO);
         } else {
             throw new IllegalArgumentException("The list did not contain the entity.");
         }
     }
-
 
     @Transactional
     public void deleteEvent(String eventId) {
