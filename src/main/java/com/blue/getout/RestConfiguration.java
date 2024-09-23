@@ -1,5 +1,6 @@
 package com.blue.getout;
 
+import com.blue.getout.comment.Comment;
 import com.blue.getout.event.Event;
 import com.blue.getout.user.User;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +13,6 @@ public class RestConfiguration implements RepositoryRestConfigurer {
 
     @Override
     public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config, CorsRegistry cors) {
-        config.exposeIdsFor(Event.class, User.class);
+        config.exposeIdsFor(Event.class, User.class, Comment.class);
     }
 }

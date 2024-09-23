@@ -1,5 +1,7 @@
 package com.blue.getout;
 
+import com.blue.getout.comment.Comment;
+import com.blue.getout.comment.CommentDTO;
 import com.blue.getout.event.Event;
 import com.blue.getout.event.EventDTO;
 import com.blue.getout.user.User;
@@ -11,11 +13,11 @@ import java.util.stream.Collectors;
 @Component
 public class Mapper {
 
-    public UserDTO toDTO(User user){
+    public UserDTO UserEntityToDTO(User user){
         return new UserDTO(user.getId(),user.getName());
     }
 
-    public EventDTO toDTO(Event event){
+    public EventDTO EventEntityToDTO(Event event){
         return new EventDTO(
                 event.getId(),
                 event.getTitle(),
@@ -28,5 +30,8 @@ public class Mapper {
                 event.getMax(),
                 event.getInfo(),
                 event.getOwner().getId());
+    }
+    public CommentDTO CommentEntityToDTO(Comment comment){
+        return new CommentDTO(comment.getId(),comment.getText(),comment.getTimestamp(),comment.getEvent().getId(),comment.getUser().getId());
     }
 }
