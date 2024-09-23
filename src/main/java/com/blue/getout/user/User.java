@@ -1,9 +1,13 @@
 package com.blue.getout.user;
+import com.blue.getout.comment.Comment;
 import com.blue.getout.event.Event;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
 
+import java.util.Set;
+@Getter @Setter
 @Entity
 public class User {
 
@@ -11,6 +15,8 @@ public class User {
     private String id;
 
     private String name;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Comment> comments;
 
     @ManyToMany
     @JoinTable(
@@ -20,28 +26,4 @@ public class User {
     )
     @JsonManagedReference
     private Set<Event> joinedEvents;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Set<Event> getJoinedEvents() {
-        return joinedEvents;
-    }
-
-    public void setJoinedEvents(Set<Event> joinedEvents) {
-        this.joinedEvents = joinedEvents;
-    }
 }
