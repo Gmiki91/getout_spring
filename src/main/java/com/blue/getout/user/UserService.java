@@ -8,12 +8,16 @@ import java.util.UUID;
 
 @Service
 public class UserService {
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private NameGenerator nameGenerator;
+    private final UserRepository userRepository;
+    private final NameGenerator nameGenerator;
+    private final  Mapper mapper;
 
-    public ResponseEntity<User> checkUser( String id) {
+    public UserService(UserRepository userRepository, NameGenerator nameGenerator, Mapper mapper){
+        this.userRepository=userRepository;
+        this.nameGenerator=nameGenerator;
+        this.mapper=mapper;
+    }
+    public ResponseEntity<UserDTO> checkUser( String id) {
         if (id != null && !id.equals("0")) {
             System.out.println("uuid nem nulla! " + id);
             User result = userRepository.findById(id).orElse(null);

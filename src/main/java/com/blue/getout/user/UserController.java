@@ -9,8 +9,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    @Autowired
-    UserService userService;
+    private final UserService userService;
+
+    public UserController(UserService userService){
+        this.userService=userService;
+    }
 
     @GetMapping("/check/{id}")
     public ResponseEntity<User> checkUser(@PathVariable String id) {
