@@ -1,7 +1,7 @@
 package com.blue.getout;
 
 import com.blue.getout.comment.Comment;
-import com.blue.getout.comment.CommentDTO;
+import com.blue.getout.comment.CommentResponse;
 import com.blue.getout.event.Event;
 import com.blue.getout.event.EventDTO;
 import com.blue.getout.user.User;
@@ -31,7 +31,7 @@ public class Mapper {
                 event.getInfo(),
                 event.getOwner().getId());
     }
-    public CommentDTO CommentEntityToDTO(Comment comment){
-        return new CommentDTO(comment.getId(),comment.getText(),comment.getTimestamp(),comment.getEvent().getId(),comment.getUser().getId());
+    public CommentResponse CommentEntityToResponse(Comment comment){
+        return new CommentResponse(comment.getId(),comment.getText(),comment.getTimestamp(),comment.getUser().getName());
     }
 }

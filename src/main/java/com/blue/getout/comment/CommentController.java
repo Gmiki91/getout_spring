@@ -16,12 +16,12 @@ public class CommentController {
     }
 
     @GetMapping("/{eventId}")
-    public ResponseEntity<List<CommentDTO>> getCommentsByEventId(@PathVariable String eventId){
+    public ResponseEntity<List<CommentResponse>> getCommentsByEventId(@PathVariable String eventId){
         return commentService.getCommentsByEventId(eventId);
     }
 
     @PostMapping()
-    public void addComment(@RequestBody CommentDTO commentDTO){
-        commentService.addComment(commentDTO);
+    public ResponseEntity<CommentResponse> addComment(@RequestBody CommentDTO commentDTO){
+        return commentService.addComment(commentDTO);
     }
 }

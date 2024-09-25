@@ -5,6 +5,7 @@ import com.blue.getout.event.Event;
 import com.blue.getout.event.EventRepository;
 import com.blue.getout.user.User;
 import com.blue.getout.user.UserRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,7 @@ public class CommentService {
         this.mapper = mapper;
     }
 
-    public void addComment(CommentDTO commentDTO) {
+    public ResponseEntity<CommentResponse> addComment(CommentDTO commentDTO) {
         Event event = eventRepository.findById(commentDTO.eventId())
                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
@@ -38,14 +39,15 @@ public class CommentService {
                 event
         );
         commentRepository.save(comment);
+        CommentResponse commentResponse= mapper.CommentEntityToResponse(comment);
+        return ResponseEntity.ok(commentResponse);
     }
 
-    public ResponseEntity<List<CommentDTO>> getCommentsByEventId(String eventId) {
-        List<CommentDTO> comments = commentRepository.findByEventId(eventId)
+    public ResponseEntity<List<CommentResponse>> getCommentsByEventId(String eventId) {
+        List<CommentResponse> comments = commentRepository.findByEventId(eventId, Sort.by(Sort.Direction.DESC, "timestamp"))
                 .stream()
-                .map(mapper::CommentEntityToDTO)
+                .map(mapper::CommentEntityToResponse)
                 .toList();
-
 
         return ResponseEntity.ok(comments);
     }
