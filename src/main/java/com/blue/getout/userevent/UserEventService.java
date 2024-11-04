@@ -43,7 +43,9 @@ public class UserEventService {
     public ResponseEntity<EventDTO> modifyEventParticipation(String eventId, String userId, boolean isJoining) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         Event event = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
-
+        if(event.getParticipants().size()<event.getMax()){
+            throw new IllegalArgumentException("The list is already full.");
+        }
         boolean userModified, eventModified;
         if (isJoining) {
             userModified = user.getJoinedEvents().add(event);
