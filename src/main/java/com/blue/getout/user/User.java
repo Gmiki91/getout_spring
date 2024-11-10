@@ -9,6 +9,7 @@ import lombok.Setter;
 import java.util.Set;
 @Getter @Setter
 @Entity
+@Table(name = "\"users\"")
 public class User {
 
     @Id
