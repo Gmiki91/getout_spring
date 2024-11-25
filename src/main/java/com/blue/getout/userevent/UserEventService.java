@@ -77,10 +77,10 @@ public class UserEventService {
     }
 
     @Transactional
-    @Scheduled(cron = "0 0 0 * * ?") // Runs every day at midnight
+    @Scheduled(cron = "@hourly")
     public void deleteOldEvents() {
         ZonedDateTime now = ZonedDateTime.now();
-        ZonedDateTime timeLimit = now.minusHours(24);
+        ZonedDateTime timeLimit = now.minusHours(1);
         List<Event> oldEvents = eventRepository.findEventsOlderThan(timeLimit);
         if (!oldEvents.isEmpty()) {
             oldEvents.forEach(this::removeEventFromJoinedLists);
