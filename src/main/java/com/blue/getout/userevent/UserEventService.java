@@ -31,7 +31,7 @@ public class UserEventService {
     @Transactional
     public ResponseEntity<EventDTO> createEventWithUserId(EventDTO eventData) {
         User user = userRepository.findById(eventData.ownerId()).orElseThrow(() -> new RuntimeException("User not found"));
-        Event event = new Event(eventData.title(), eventData.location(), eventData.latLng(), eventData.time(), eventData.min(), eventData.max(), Set.of(user), eventData.info(), user);
+        Event event = new Event(eventData.title(), eventData.location(), eventData.latLng(), eventData.time(),eventData.endTime(), eventData.min(), eventData.max(), Set.of(user), eventData.info(), user);
         eventRepository.save(event);
         user.getJoinedEvents().add(event);
         userRepository.save(user);

@@ -24,6 +24,7 @@ public class Mapper {
                 event.getLocation(),
                 event.getLatLng(),
                 event.getTime(),
+                event.getEndTime(),
                 event.getParticipants().stream()
                         .map(user -> new UserDTO(user.getId(), user.getName())).collect(Collectors.toSet()),
                 event.getMin(),

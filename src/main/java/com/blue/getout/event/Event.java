@@ -31,6 +31,10 @@ public class Event {
     @Column(name = "time")
     private ZonedDateTime time;
 
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "end_time")
+    private ZonedDateTime endTime;
+
     @Column(name = "min_people")
     private int min;
 
@@ -56,12 +60,13 @@ public class Event {
         this.id = UUID.randomUUID().toString();
     }
 
-    public Event(String title, String location,LatLng latLng, ZonedDateTime time, int min, int max, Set<User> participants, String info,User owner) {
+    public Event(String title, String location,LatLng latLng, ZonedDateTime time, ZonedDateTime endTime,int min, int max, Set<User> participants, String info,User owner) {
         this.id = UUID.randomUUID().toString();
         this.title = title;
         this.location = location;
         this.latLng = latLng;
         this.time = time;
+        this.endTime = endTime;
         this.min = min;
         this.max = max;
         this.participants = participants;
