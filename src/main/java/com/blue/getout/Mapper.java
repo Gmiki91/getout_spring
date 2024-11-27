@@ -8,6 +8,7 @@ import com.blue.getout.user.User;
 import com.blue.getout.user.UserDTO;
 import org.springframework.stereotype.Component;
 
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -25,14 +26,26 @@ public class Mapper {
                 event.getLatLng(),
                 event.getTime(),
                 event.getEndTime(),
-                event.getParticipants().stream()
-                        .map(user -> new UserDTO(user.getId(), user.getName())).collect(Collectors.toSet()),
+                mapParticipants(event.getParticipants()),
                 event.getMin(),
                 event.getMax(),
                 event.getInfo(),
+                event.getRecurring(),
                 event.getOwner().getId());
+    }
+
+    public Event EventDTOToEntity(EventDTO eventData, User user){
+        return new Event(eventData.title(), eventData.location(), eventData.latLng(), eventData.time(),eventData.endTime(),
+                eventData.min(), eventData.max(), Set.of(user), eventData.info(),eventData.recurring(), user);
     }
     public CommentResponse CommentEntityToResponse(Comment comment){
         return new CommentResponse(comment.getId(),comment.getText(),comment.getTimestamp(),comment.getUser().getName());
+    }
+
+    // PRIVATE METHODS
+    private Set<UserDTO> mapParticipants(Set<User> participants) {
+        return participants.stream()
+                .map(user -> new UserDTO(user.getId(), user.getName()))
+                .collect(Collectors.toSet());
     }
 }

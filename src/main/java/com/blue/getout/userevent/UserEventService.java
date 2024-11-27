@@ -7,6 +7,7 @@ import com.blue.getout.event.EventRepository;
 import com.blue.getout.user.User;
 import com.blue.getout.user.UserRepository;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -31,22 +32,22 @@ public class UserEventService {
     @Transactional
     public ResponseEntity<EventDTO> createEventWithUserId(EventDTO eventData) {
         User user = userRepository.findById(eventData.ownerId()).orElseThrow(() -> new RuntimeException("User not found"));
-        Event event = new Event(eventData.title(), eventData.location(), eventData.latLng(), eventData.time(),eventData.endTime(), eventData.min(), eventData.max(), Set.of(user), eventData.info(), user);
+        Event event = mapper.EventDTOToEntity(eventData, user);
         eventRepository.save(event);
         user.getJoinedEvents().add(event);
         userRepository.save(user);
         EventDTO eventDTO = mapper.EventEntityToDTO(event);
-        return ResponseEntity.ok(eventDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(eventDTO);
     }
 
     @Transactional
     public ResponseEntity<EventDTO> modifyEventParticipation(String eventId, String userId, boolean isJoining) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         Event event = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
-        if(isJoining && event.getMax()!=0 && event.getParticipants().size()>=event.getMax()){
+        if (isJoining && event.getMax() != 0 && event.getParticipants().size() >= event.getMax()) {
             throw new IllegalArgumentException("The list is full.");
         }
-        if(!isJoining && event.getParticipants().isEmpty()){
+        if (!isJoining && event.getParticipants().isEmpty()) {
             throw new IllegalArgumentException("The list is already empty.");
         }
         boolean userModified, eventModified;
@@ -86,6 +87,11 @@ public class UserEventService {
             oldEvents.forEach(this::removeEventFromJoinedLists);
             eventRepository.deleteAll(oldEvents);
         }
+        List<Event> recurringEvents = eventRepository.findRecurringEventsOlderThan(timeLimit);
+        if (!recurringEvents.isEmpty()) {
+            recurringEvents.forEach(this::updateRecurringEvent);
+            eventRepository.saveAll(recurringEvents);
+        }
     }
 
     private void removeEventFromJoinedLists(Event event) {
@@ -94,6 +100,24 @@ public class UserEventService {
             userRepository.save(user);
         });
         event.getParticipants().clear();
+    }
 
+    private void updateRecurringEvent(Event event) {
+        switch (event.getRecurring()) {
+            case "daily":
+                event.setTime(event.getTime().plusDays(1));
+                event.setEndTime(event.getEndTime().plusDays(1));
+                break;
+            case "weekly":
+                event.setTime(event.getTime().plusWeeks(1));
+                event.setEndTime(event.getEndTime().plusWeeks(1));
+                break;
+            case "monthly":
+                event.setTime(event.getTime().plusMonths(1));
+                event.setEndTime(event.getEndTime().plusMonths(1));
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown recurrence type: " + event.getRecurring());
+        }
     }
 }

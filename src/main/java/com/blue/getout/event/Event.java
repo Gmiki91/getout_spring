@@ -51,6 +51,9 @@ public class Event {
     @Column(name = "info")
     private String info;
 
+    @Column(name="recurring")
+    private String recurring;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     @JsonBackReference
@@ -60,7 +63,7 @@ public class Event {
         this.id = UUID.randomUUID().toString();
     }
 
-    public Event(String title, String location,LatLng latLng, ZonedDateTime time, ZonedDateTime endTime,int min, int max, Set<User> participants, String info,User owner) {
+    public Event(String title, String location,LatLng latLng, ZonedDateTime time, ZonedDateTime endTime,int min, int max, Set<User> participants, String info,String recurring,User owner) {
         this.id = UUID.randomUUID().toString();
         this.title = title;
         this.location = location;
@@ -71,6 +74,7 @@ public class Event {
         this.max = max;
         this.participants = participants;
         this.info = info;
+        this.recurring = recurring;
         this.owner = owner;
     }
 }
