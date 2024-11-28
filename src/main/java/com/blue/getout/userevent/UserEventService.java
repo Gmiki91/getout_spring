@@ -1,6 +1,6 @@
 package com.blue.getout.userevent;
 
-import com.blue.getout.Mapper;
+import com.blue.getout.utils.Mapper;
 import com.blue.getout.event.Event;
 import com.blue.getout.event.EventDTO;
 import com.blue.getout.event.EventRepository;
@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Set;
 
 @Service
 public class UserEventService {

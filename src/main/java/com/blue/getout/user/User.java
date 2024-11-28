@@ -27,4 +27,6 @@ public class User {
     )
     @JsonManagedReference
     private Set<Event> joinedEvents;
+
+    private String avatarUrl;
 }

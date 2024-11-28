@@ -1,4 +1,4 @@
-package com.blue.getout;
+package com.blue.getout.utils;
 
 import com.blue.getout.comment.Comment;
 import com.blue.getout.comment.CommentResponse;
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 public class Mapper {
 
     public UserDTO UserEntityToDTO(User user){
-        return new UserDTO(user.getId(),user.getName());
+        return new UserDTO(user.getId(),user.getName(), user.getAvatarUrl());
     }
 
     public EventDTO EventEntityToDTO(Event event){
@@ -39,13 +39,13 @@ public class Mapper {
                 eventData.min(), eventData.max(), Set.of(user), eventData.info(),eventData.recurring(), user);
     }
     public CommentResponse CommentEntityToResponse(Comment comment){
-        return new CommentResponse(comment.getId(),comment.getText(),comment.getTimestamp(),comment.getUser().getName());
+        return new CommentResponse(comment.getId(),comment.getText(),comment.getTimestamp(),comment.getUser().getName(),comment.getUser().getAvatarUrl());
     }
 
     // PRIVATE METHODS
     private Set<UserDTO> mapParticipants(Set<User> participants) {
         return participants.stream()
-                .map(user -> new UserDTO(user.getId(), user.getName()))
+                .map(user -> new UserDTO(user.getId(), user.getName(),user.getAvatarUrl()))
                 .collect(Collectors.toSet());
     }
 }

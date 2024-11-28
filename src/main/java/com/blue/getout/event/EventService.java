@@ -1,6 +1,6 @@
 package com.blue.getout.event;
 
-import com.blue.getout.Mapper;
+import com.blue.getout.utils.Mapper;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import java.util.*;

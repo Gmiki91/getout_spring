@@ -1,4 +1,4 @@
-package com.blue.getout;
+package com.blue.getout.utils;
 
 import org.springframework.stereotype.Component;
 

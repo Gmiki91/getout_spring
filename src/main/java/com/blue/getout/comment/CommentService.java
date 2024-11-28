@@ -1,6 +1,6 @@
 package com.blue.getout.comment;
 
-import com.blue.getout.Mapper;
+import com.blue.getout.utils.Mapper;
 import com.blue.getout.event.Event;
 import com.blue.getout.event.EventRepository;
 import com.blue.getout.user.User;
