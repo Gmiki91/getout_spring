@@ -1,6 +1,7 @@
 package com.blue.getout.event;
 
 import com.blue.getout.comment.Comment;
+import com.blue.getout.notification.Notification;
 import com.blue.getout.user.User;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
@@ -43,6 +44,9 @@ public class Event {
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Comment> comments;  // Comments for the event
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Notification> notifications;
 
     @ManyToMany(mappedBy = "joinedEvents")
     @JsonBackReference

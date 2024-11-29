@@ -1,5 +1,6 @@
 package com.blue.getout.userevent;
 
+import com.blue.getout.notification.NotificationService;
 import com.blue.getout.utils.Mapper;
 import com.blue.getout.event.Event;
 import com.blue.getout.event.EventDTO;
@@ -20,11 +21,13 @@ import java.util.List;
 public class UserEventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
     private final Mapper mapper;
 
-    public UserEventService(EventRepository eventRepository, UserRepository userRepository, Mapper mapper) {
+    public UserEventService(EventRepository eventRepository, UserRepository userRepository,NotificationService notificationService, Mapper mapper) {
         this.userRepository = userRepository;
         this.eventRepository = eventRepository;
+        this.notificationService =notificationService;
         this.mapper = mapper;
     }
 
@@ -72,6 +75,7 @@ public class UserEventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
         this.removeEventFromJoinedLists(event);
+        notificationService.updateDeleteNotification(event);
         eventRepository.save(event);
         eventRepository.delete(event);
     }

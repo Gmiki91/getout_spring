@@ -1,6 +1,7 @@
 package com.blue.getout.user;
 import com.blue.getout.comment.Comment;
 import com.blue.getout.event.Event;
+import com.blue.getout.notification.Notification;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -18,6 +19,9 @@ public class User {
     private String name;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Comment> comments;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Notification> notifications;
 
     @ManyToMany
     @JoinTable(

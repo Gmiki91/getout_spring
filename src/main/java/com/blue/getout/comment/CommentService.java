@@ -1,5 +1,6 @@
 package com.blue.getout.comment;
 
+import com.blue.getout.notification.NotificationService;
 import com.blue.getout.utils.Mapper;
 import com.blue.getout.event.Event;
 import com.blue.getout.event.EventRepository;
@@ -16,12 +17,14 @@ public class CommentService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
+    private final NotificationService notificationService;
     private final Mapper mapper;
 
-    public CommentService(EventRepository eventRepository, UserRepository userRepository, CommentRepository commentRepository, Mapper mapper) {
+    public CommentService(EventRepository eventRepository, UserRepository userRepository, CommentRepository commentRepository, NotificationService notificationService, Mapper mapper) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.commentRepository = commentRepository;
+        this.notificationService=notificationService;
         this.mapper = mapper;
     }
 
@@ -39,6 +42,7 @@ public class CommentService {
                 event
         );
         commentRepository.save(comment);
+        this.notificationService.updateCommentNotification(event,user.getId());
         CommentResponse commentResponse= mapper.CommentEntityToResponse(comment);
         return ResponseEntity.ok(commentResponse);
     }

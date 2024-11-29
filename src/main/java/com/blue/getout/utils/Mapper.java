@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 public class Mapper {
 
     public UserDTO UserEntityToDTO(User user){
-        return new UserDTO(user.getId(),user.getName(), user.getAvatarUrl());
+        return new UserDTO(user.getId(),user.getName(), user.getAvatarUrl(),user.getNotifications());
     }
 
     public EventDTO EventEntityToDTO(Event event){
@@ -45,7 +45,7 @@ public class Mapper {
     // PRIVATE METHODS
     private Set<UserDTO> mapParticipants(Set<User> participants) {
         return participants.stream()
-                .map(user -> new UserDTO(user.getId(), user.getName(),user.getAvatarUrl()))
+                .map(user -> new UserDTO(user.getId(), user.getName(),user.getAvatarUrl(),user.getNotifications()))
                 .collect(Collectors.toSet());
     }
 }
