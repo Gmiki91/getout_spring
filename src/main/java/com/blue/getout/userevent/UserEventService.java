@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZonedDateTime;
@@ -82,14 +83,24 @@ public class UserEventService {
 
     @Transactional
     @Scheduled(cron = "@hourly")
-    public void deleteOldEvents() {
+    public void processOldEvents() {
         ZonedDateTime now = ZonedDateTime.now();
         ZonedDateTime timeLimit = now.minusHours(1);
+        deleteOldEvents(timeLimit);
+        processRecurringEvents(timeLimit);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    private void deleteOldEvents(ZonedDateTime timeLimit) {
         List<Event> oldEvents = eventRepository.findEventsOlderThan(timeLimit);
         if (!oldEvents.isEmpty()) {
             oldEvents.forEach(this::removeEventFromJoinedLists);
             eventRepository.deleteAll(oldEvents);
         }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    private void processRecurringEvents(ZonedDateTime timeLimit) {
         List<Event> recurringEvents = eventRepository.findRecurringEventsOlderThan(timeLimit);
         if (!recurringEvents.isEmpty()) {
             recurringEvents.forEach(this::updateRecurringEvent);
