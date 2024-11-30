@@ -75,8 +75,8 @@ public class UserEventService {
     public void deleteEvent(String eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
-        this.removeEventFromJoinedLists(event);
         notificationService.updateDeleteNotification(event);
+        this.removeEventFromJoinedLists(event);
         eventRepository.save(event);
         eventRepository.delete(event);
     }
