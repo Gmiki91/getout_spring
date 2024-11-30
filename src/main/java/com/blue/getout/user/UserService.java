@@ -6,6 +6,9 @@ import com.blue.getout.utils.Utils;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 @Service
@@ -39,6 +42,16 @@ public class UserService {
                 .map(user -> ResponseEntity.ok(mapper.UserEntityToDTO(user)))
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+    }
+
+    @Transactional
+    public  ResponseEntity<UserDTO> clearNotifications(String id){
+        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        user.getNotifications().forEach(notification -> {
+            notification.setReadTimestamp(ZonedDateTime.now());
+        });
+        userRepository.save(user);
+        return  ResponseEntity.ok(mapper.UserEntityToDTO(user));
     }
 
     private User createNewUser() {
