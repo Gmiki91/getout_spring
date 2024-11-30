@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZonedDateTime;
+import java.util.HashSet;
 import java.util.UUID;
 
 @Service
@@ -62,6 +63,7 @@ public class UserService {
         user.setName(randomName);
         user.setId(UUID.randomUUID().toString());
         user.setAvatarUrl(avatar);
+        user.setNotifications(new HashSet<>());
 
         return userRepository.save(user);
     }
