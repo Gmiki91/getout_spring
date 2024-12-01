@@ -10,8 +10,7 @@ import com.blue.getout.user.User;
 import com.blue.getout.user.UserDTO;
 import org.springframework.stereotype.Component;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -54,23 +53,27 @@ public class Mapper {
     }
 
     private Set<NotificationDTO> setNotifications(Set<Notification> notifications) {
-        Set<NotificationDTO> result = new HashSet<>();
+        List<NotificationDTO> result = new ArrayList<>();
         notifications.forEach(notification -> {
+            // for status notifications (which is just delete notifications for now, but will add field modifications later)
             if (notification.getUpdateInfo()!=null && !notification.getUpdateInfo().isEmpty()) {
                 boolean read = notification.getReadTimestamp().isAfter(notification.getUpdateTimestamp());
-                NotificationDTO n1 = new NotificationDTO(notification.getEvent().getId(),
+                String eventID = notification.getEvent() ==null ? "0" : notification.getEvent().getId(); // in case of Delete notification
+                NotificationDTO n1 = new NotificationDTO(eventID,
                         notification.getUpdateInfo(), notification.getUpdateTimestamp(),read);
                 result.add(n1);
             }
-            if (notification.getCommentCount() > 0) {
+            // For comment notifications
+            // if there are unseen comments but the event has been deleted, dont show comments
+            if (notification.getCommentCount() > 0 && notification.getEvent() !=null) {
                 boolean read = notification.getReadTimestamp().isAfter(notification.getCommentTimestamp());
                 String text = notification.getCommentCount()>1 ? " new comments in '" : " new comment in '";
                 NotificationDTO n2 = new NotificationDTO(notification.getEvent().getId(),
                         notification.getCommentCount() + text + notification.getEvent().getTitle() + "'",
-                        notification.getUpdateTimestamp(),read);
+                        notification.getCommentTimestamp(),read);
                 result.add(n2);
             }
         });
-        return result;
+        return result.stream().sorted(Comparator.comparing(NotificationDTO::updateStamp).reversed()).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 }

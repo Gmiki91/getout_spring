@@ -45,7 +45,7 @@ public class Event {
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Comment> comments;  // Comments for the event
 
-    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "event")
     private Set<Notification> notifications;
 
     @ManyToMany(mappedBy = "joinedEvents")

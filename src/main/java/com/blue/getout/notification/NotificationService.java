@@ -15,6 +15,9 @@ public class NotificationService {
     public NotificationService(NotificationRepository notificationRepository) {
         this.notificationRepository = notificationRepository;
     }
+    public void deleteNotifications(String eventId){
+        this.notificationRepository.deleteById(eventId);
+    }
 
     @Transactional
     public void updateDeleteNotification(Event event) {
@@ -24,6 +27,7 @@ public class NotificationService {
                 notification.setUpdateTimestamp(ZonedDateTime.now());
                 notification.setUpdateInfo("The event '" + event.getTitle() + "' has been deleted.");
             }
+            notification.setEvent(null);
         });
         notificationRepository.saveAll(notifications);
     }

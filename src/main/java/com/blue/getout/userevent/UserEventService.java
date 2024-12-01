@@ -25,10 +25,10 @@ public class UserEventService {
     private final NotificationService notificationService;
     private final Mapper mapper;
 
-    public UserEventService(EventRepository eventRepository, UserRepository userRepository,NotificationService notificationService, Mapper mapper) {
+    public UserEventService(EventRepository eventRepository, UserRepository userRepository, NotificationService notificationService, Mapper mapper) {
         this.userRepository = userRepository;
         this.eventRepository = eventRepository;
-        this.notificationService =notificationService;
+        this.notificationService = notificationService;
         this.mapper = mapper;
     }
 
@@ -77,6 +77,8 @@ public class UserEventService {
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
         notificationService.updateDeleteNotification(event);
         this.removeEventFromJoinedLists(event);
+        // Save changes to ensure notifications are updated before deleting the event
+        // This ensures that the Notification entities are not considered orphans and will not be automatically deleted by Hibernate.
         eventRepository.save(event);
         eventRepository.delete(event);
     }
@@ -94,7 +96,10 @@ public class UserEventService {
     private void deleteOldEvents(ZonedDateTime timeLimit) {
         List<Event> oldEvents = eventRepository.findEventsOlderThan(timeLimit);
         if (!oldEvents.isEmpty()) {
-            oldEvents.forEach(this::removeEventFromJoinedLists);
+            oldEvents.forEach(event -> {
+                removeEventFromJoinedLists(event);
+                notificationService.deleteNotifications(event.getId());
+            });
             eventRepository.deleteAll(oldEvents);
         }
     }

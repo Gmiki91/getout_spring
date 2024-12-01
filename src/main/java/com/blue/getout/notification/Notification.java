@@ -22,7 +22,7 @@ public class Notification {
     private User user;
 
     @ManyToOne()
-    @JoinColumn(name = "event_id")
+    @JoinColumn(name = "event_id",nullable = true)
     @JsonBackReference
     private Event event;
 
