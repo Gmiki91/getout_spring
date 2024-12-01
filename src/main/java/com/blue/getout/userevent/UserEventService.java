@@ -92,7 +92,7 @@ public class UserEventService {
         processRecurringEvents(timeLimit);
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     private void deleteOldEvents(ZonedDateTime timeLimit) {
         List<Event> oldEvents = eventRepository.findEventsOlderThan(timeLimit);
         if (!oldEvents.isEmpty()) {
@@ -104,7 +104,7 @@ public class UserEventService {
         }
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     private void processRecurringEvents(ZonedDateTime timeLimit) {
         List<Event> recurringEvents = eventRepository.findRecurringEventsOlderThan(timeLimit);
         if (!recurringEvents.isEmpty()) {

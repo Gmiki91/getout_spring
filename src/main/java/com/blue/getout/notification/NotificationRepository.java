@@ -7,4 +7,5 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 @CrossOrigin
 @RepositoryRestResource(path = "notifications")
 public interface NotificationRepository extends JpaRepository<Notification,String> {
+    void deleteByEventId(String eventId);
 }

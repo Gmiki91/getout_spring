@@ -16,7 +16,7 @@ public class NotificationService {
         this.notificationRepository = notificationRepository;
     }
     public void deleteNotifications(String eventId){
-        this.notificationRepository.deleteById(eventId);
+        this.notificationRepository.deleteByEventId(eventId);
     }
 
     @Transactional
