@@ -4,6 +4,7 @@ import com.blue.getout.comment.Comment;
 import com.blue.getout.notification.Notification;
 import com.blue.getout.user.User;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -43,13 +44,15 @@ public class Event {
     private int max;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private Set<Comment> comments;  // Comments for the event
 
     @OneToMany(mappedBy = "event")
+    @JsonIgnore
     private Set<Notification> notifications;
 
     @ManyToMany(mappedBy = "joinedEvents")
-    @JsonBackReference
+    @JsonBackReference("user-participants")
     private Set<User> participants;
 
     @Column(name = "info")
@@ -60,7 +63,7 @@ public class Event {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
-    @JsonBackReference
+    @JsonBackReference("event-owner")
     private User owner;
 
     public Event() {

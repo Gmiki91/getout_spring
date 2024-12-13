@@ -13,6 +13,6 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOrigins("http://localhost:4200","http://localhost:4000", "https://getout-ng.azurewebsites.net")
                 .allowCredentials(true)
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS");
+                .allowedMethods("GET", "POST", "PUT","PATCH", "DELETE", "OPTIONS");
     }
 }

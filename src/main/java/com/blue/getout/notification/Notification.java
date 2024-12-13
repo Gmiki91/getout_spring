@@ -18,12 +18,12 @@ public class Notification {
 
     @ManyToOne()
     @JoinColumn(name = "user_id")
-    @JsonBackReference
+    @JsonBackReference("user-notifications")
     private User user;
 
     @ManyToOne()
     @JoinColumn(name = "event_id",nullable = true)
-    @JsonBackReference
+    @JsonBackReference("event-notifications")
     private Event event;
 
     /**

@@ -18,9 +18,11 @@ public class User {
 
     private String name;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("user-comments")
     private Set<Comment> comments;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("user-notifications")
     private Set<Notification> notifications;
 
     @ManyToMany
@@ -29,7 +31,7 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "event_id")
     )
-    @JsonManagedReference
+    @JsonManagedReference("user-participants")
     private Set<Event> joinedEvents;
 
     private String avatarUrl;
