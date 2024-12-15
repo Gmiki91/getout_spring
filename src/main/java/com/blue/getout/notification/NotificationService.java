@@ -1,9 +1,10 @@
 package com.blue.getout.notification;
 
 import com.blue.getout.event.Event;
+import com.blue.getout.event.UpdateType;
+import com.blue.getout.user.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -20,16 +21,22 @@ public class NotificationService {
     }
 
     @Transactional
-    public void updateDeleteNotification(Event event) {
+    public void updateNotification(Event event, UpdateType type) {
         Set<Notification> notifications = event.getNotifications().isEmpty() ? createNotifications(event) : event.getNotifications();
         notifications.forEach(notification -> {
-            if (!event.getOwner().getId().equals(notification.getUser().getId())) { //only the owner can  delete the event, they dont need notification
-                notification.setUpdateTimestamp(ZonedDateTime.now());
-                notification.setUpdateInfo("The event '" + event.getTitle() + "' has been deleted.");
+        boolean isOwner = event.getOwner().getId().equals(notification.getUser().getId());
+            if(type.equals(UpdateType.DELETED)) {
+                if (isOwner) {
+                    notificationRepository.delete(notification);  // the notification entity of the owner can be deleted
+                }else{
+                    notification.setEvent(null); // for subscribed users, we send a deleted notification
+                }
             }
-            notification.setEvent(null);
+            if (!isOwner) { //only the owner can update the event, they dont need notification
+                notification.setUpdateTimestamp(ZonedDateTime.now());
+                notification.setUpdateInfo("The event '" + event.getTitle() + "' has been "+type.label+".");
+            }
         });
-        notificationRepository.saveAll(notifications);
     }
 
     @Transactional
@@ -45,20 +52,37 @@ public class NotificationService {
                 notification.setCommentTimestamp(ZonedDateTime.now());
             }
         });
-        notificationRepository.saveAll(notifications);
+    }
+
+    @Transactional
+    public void subscribeToEvent(Event event, User user){
+        Notification notification = createNotification(event,user);
+        user.getJoinedEvents().add(event);
+    }
+
+    @Transactional
+    public void unsubscribeFromEvent(Event event, User user) {
+        event.getNotifications().removeIf(notification -> notification.getUser().equals(user));
+        notificationRepository.deleteByEventAndUser(event, user);
     }
 
     private Set<Notification> createNotifications(Event event) {
         Set<Notification> notifications = new HashSet<>();
         event.getParticipants().forEach(user -> {
-            Notification notification = new Notification();
-            notification.setEvent(event);
-            notification.setUser(user);
-            notification.setUpdateTimestamp(ZonedDateTime.now());
-            notification.setCommentTimestamp(ZonedDateTime.now());
-            notification.setReadTimestamp(ZonedDateTime.now().minusHours(1));
+            Notification notification = this.createNotification(event,user);
             notifications.add(notification);
         });
         return notifications;
+    }
+
+    public Notification createNotification(Event event, User user){
+        Notification notification = new Notification();
+        notification.setEvent(event);
+        notification.setUser(user);
+        notification.setUpdateTimestamp(ZonedDateTime.now());
+        notification.setCommentTimestamp(ZonedDateTime.now());
+        notification.setReadTimestamp(ZonedDateTime.now().minusHours(1));
+        notificationRepository.save(notification);
+        return notification;
     }
 }

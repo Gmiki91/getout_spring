@@ -8,10 +8,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.time.ZonedDateTime;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+
 @Getter @Setter
 @Entity
 @Table(name = "events")
@@ -45,11 +46,11 @@ public class Event {
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
-    private Set<Comment> comments;  // Comments for the event
+    private Set<Comment> comments;
 
     @OneToMany(mappedBy = "event")
     @JsonIgnore
-    private Set<Notification> notifications;
+    private Set<Notification> notifications = new HashSet<>();
 
     @ManyToMany(mappedBy = "joinedEvents")
     @JsonBackReference("user-participants")

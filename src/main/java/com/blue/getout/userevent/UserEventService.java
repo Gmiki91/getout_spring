@@ -1,5 +1,6 @@
 package com.blue.getout.userevent;
 
+import com.blue.getout.event.UpdateType;
 import com.blue.getout.notification.NotificationService;
 import com.blue.getout.utils.Mapper;
 import com.blue.getout.event.Event;
@@ -12,7 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZonedDateTime;
@@ -37,7 +37,7 @@ public class UserEventService {
         User user = userRepository.findById(eventData.ownerId()).orElseThrow(() -> new RuntimeException("User not found"));
         Event event = mapper.EventDTOToEntity(eventData, user);
         eventRepository.save(event);
-        user.getJoinedEvents().add(event);
+        notificationService.subscribeToEvent(event,user);
         userRepository.save(user);
         EventDTO eventDTO = mapper.EventEntityToDTO(event);
         return ResponseEntity.status(HttpStatus.CREATED).body(eventDTO);
@@ -57,9 +57,11 @@ public class UserEventService {
         if (isJoining) {
             userModified = user.getJoinedEvents().add(event);
             eventModified = event.getParticipants().add(user);
+            notificationService.subscribeToEvent(event,user);
         } else {
             userModified = user.getJoinedEvents().remove(event);
             eventModified = event.getParticipants().remove(user);
+            notificationService.unsubscribeFromEvent(event,user);
         }
 
         if (userModified && eventModified) {
@@ -75,7 +77,7 @@ public class UserEventService {
     public void deleteEvent(String eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
-        notificationService.updateDeleteNotification(event);
+        notificationService.updateNotification(event, UpdateType.DELETED);
         this.removeEventFromJoinedLists(event);
         // Save changes to ensure notifications are updated before deleting the event
         // This ensures that the Notification entities are not considered orphans and will not be automatically deleted by Hibernate.

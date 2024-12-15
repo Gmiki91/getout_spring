@@ -20,4 +20,10 @@ public class EventController {
         return ResponseEntity.ok(result);
     }
 
+    @PatchMapping("/{eventId}")
+    public ResponseEntity<EventDTO> patchEvent(@PathVariable String eventId, @RequestBody Map<String, Object> updates) {
+        return eventService.patchEvent(eventId,updates);
+
+    }
+
 }
