@@ -2,6 +2,7 @@ package com.blue.getout.event;
 
 import com.blue.getout.notification.NotificationService;
 import com.blue.getout.utils.Mapper;
+import com.blue.getout.utils.Utils;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -17,11 +18,13 @@ public class EventService {
     private final EventRepository eventRepository;
     private final NotificationService notificationService;
     private final Mapper mapper;
+    private final Utils utils;
 
-    public EventService(EventRepository eventRepository, NotificationService notificationService, Mapper mapper) {
+    public EventService(EventRepository eventRepository, NotificationService notificationService, Mapper mapper,Utils utils) {
         this.eventRepository = eventRepository;
         this.notificationService = notificationService;
         this.mapper = mapper;
+        this.utils=utils;
     }
 
     public Map<String, List<EventDTO>> getEventsForUser(String userId) {
@@ -46,7 +49,9 @@ public class EventService {
             Field field = ReflectionUtils.findField(Event.class, key); // Get field by name
             if (field != null) {
                 field.setAccessible(true);
-                ReflectionUtils.setField(field, event, value);
+                Object convertedValue = utils.convertStringToZonedDateTime(field.getType(), value);
+                // Update the field with the converted value
+                ReflectionUtils.setField(field, event, convertedValue);
             }
         });
         Event copy = new Event();
