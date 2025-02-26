@@ -27,7 +27,7 @@ public class EventService {
         this.utils=utils;
     }
 
-    public Map<String, List<EventDTO>> getEventsForUser(String userId) {
+    public Map<String, List<EventDTO>> getEventsForUser(UUID userId) {
 
         List<EventDTO> joinedEvents = getEvents(
                 id -> eventRepository.findEventsJoinedByUser(id, Sort.by(Sort.Direction.ASC, "time")), userId);
@@ -41,7 +41,7 @@ public class EventService {
         return result;
     }
 
-    public ResponseEntity<EventDTO> patchEvent(String eventId, Map<String, Object> updates) {
+    public ResponseEntity<EventDTO> patchEvent(UUID eventId, Map<String, Object> updates) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + eventId));
         String originalTitle = event.getTitle(); // in case of title change, notification should show the old one
@@ -64,7 +64,7 @@ public class EventService {
         return ResponseEntity.ok(response);
     }
 
-    private List<EventDTO> getEvents(Function<String, List<Event>> eventFinder, String userId) {
+    private List<EventDTO> getEvents(Function<UUID, List<Event>> eventFinder, UUID userId) {
         return eventFinder.apply(userId)
                 .stream()
                 .map(mapper::EventEntityToDTO)

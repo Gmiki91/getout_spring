@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class CommentService {
@@ -47,7 +48,7 @@ public class CommentService {
         return ResponseEntity.ok(commentResponse);
     }
 
-    public ResponseEntity<List<CommentResponse>> getCommentsByEventId(String eventId) {
+    public ResponseEntity<List<CommentResponse>> getCommentsByEventId(UUID eventId) {
         List<CommentResponse> comments = commentRepository.findByEventId(eventId, Sort.by(Sort.Direction.DESC, "timestamp"))
                 .stream()
                 .map(mapper::CommentEntityToResponse)

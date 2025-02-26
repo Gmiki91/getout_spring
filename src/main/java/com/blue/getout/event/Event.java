@@ -18,7 +18,7 @@ import java.util.UUID;
 @Table(name = "events")
 public class Event {
     @Id
-    private String id;
+    private UUID id;
 
     @Column(name = "title")
     private String title;
@@ -68,11 +68,11 @@ public class Event {
     private User owner;
 
     public Event() {
-        this.id = UUID.randomUUID().toString();
+        this.id = UUID.randomUUID();
     }
 
     public Event(String title, String location,LatLng latLng, ZonedDateTime time, ZonedDateTime endTime,int min, int max, Set<User> participants, String info,String recurring,User owner) {
-        this.id = UUID.randomUUID().toString();
+        this.id = UUID.randomUUID();
         this.title = title;
         this.location = location;
         this.latLng = latLng;

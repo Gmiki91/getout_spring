@@ -14,7 +14,7 @@ import java.util.UUID;
 @Table(name = "notifications")
 public class Notification {
     @Id
-    private String id;
+    private UUID id;
 
     @ManyToOne()
     @JoinColumn(name = "user_id")
@@ -51,10 +51,10 @@ public class Notification {
     @Column(name = "read_timestamp")
     private ZonedDateTime readTimestamp;
 
-    public Notification(){this.id = UUID.randomUUID().toString();}
+    public Notification(){this.id = UUID.randomUUID();}
 
     public Notification(User user, Event event, String updateInfo, ZonedDateTime updateTimestamp, int commentCount, ZonedDateTime commentTimestamp, ZonedDateTime readTimestamp) {
-        this.id = UUID.randomUUID().toString();;
+        this.id = UUID.randomUUID();
         this.user = user;
         this.event = event;
         this.updateInfo = updateInfo;

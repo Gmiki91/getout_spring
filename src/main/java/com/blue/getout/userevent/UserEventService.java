@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class UserEventService {
@@ -44,7 +45,7 @@ public class UserEventService {
     }
 
     @Transactional
-    public ResponseEntity<EventDTO> modifyEventParticipation(String eventId, String userId, boolean isJoining) {
+    public ResponseEntity<EventDTO> modifyEventParticipation(UUID eventId, UUID userId, boolean isJoining) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         Event event = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
         if (isJoining && event.getMax() != 0 && event.getParticipants().size() >= event.getMax()) {
@@ -74,7 +75,7 @@ public class UserEventService {
     }
 
     @Transactional
-    public void deleteEvent(String eventId) {
+    public void deleteEvent(UUID eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
         notificationService.updateNotification(event, UpdateType.DELETED);

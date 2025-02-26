@@ -58,7 +58,7 @@ public class Mapper {
             // for status notifications (which is just delete notifications for now, but will add field modifications later)
             if (notification.getUpdateInfo()!=null && !notification.getUpdateInfo().isEmpty()) {
                 boolean read = notification.getReadTimestamp().isAfter(notification.getUpdateTimestamp());
-                String eventID = notification.getEvent() ==null ? "0" : notification.getEvent().getId(); // in case of Delete notification
+                UUID eventID = notification.getEvent() ==null ? null : notification.getEvent().getId(); // in case of Delete notification
                 NotificationDTO n1 = new NotificationDTO(eventID,
                         notification.getUpdateInfo(), notification.getUpdateTimestamp(),read);
                 result.add(n1);

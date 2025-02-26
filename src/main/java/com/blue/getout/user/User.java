@@ -5,16 +5,23 @@ import com.blue.getout.notification.Notification;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.util.Set;
+import java.util.UUID;
+
 @Getter @Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "\"users\"")
+@EntityListeners(AuditingEntityListener.class)
 public class User {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     private String name;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -35,4 +42,6 @@ public class User {
     private Set<Event> joinedEvents;
 
     private String avatarUrl;
+    private String email;
+    private String password;
 }

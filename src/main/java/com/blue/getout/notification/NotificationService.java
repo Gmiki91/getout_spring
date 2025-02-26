@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 public class NotificationService {
@@ -16,7 +17,7 @@ public class NotificationService {
     public NotificationService(NotificationRepository notificationRepository) {
         this.notificationRepository = notificationRepository;
     }
-    public void deleteNotifications(String eventId){
+    public void deleteNotifications(UUID eventId){
         this.notificationRepository.deleteByEventId(eventId);
     }
 
@@ -40,7 +41,7 @@ public class NotificationService {
     }
 
     @Transactional
-    public void updateCommentNotification(Event event, String userId) {
+    public void updateCommentNotification(Event event, UUID userId) {
         Set<Notification> notifications = event.getNotifications().isEmpty() ? createNotifications(event) : event.getNotifications();
         notifications.forEach(notification -> {
             if (!notification.getUser().getId().equals(userId)) { // the comment's author need no notification

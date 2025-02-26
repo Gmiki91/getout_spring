@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/comments")
@@ -16,7 +17,7 @@ public class CommentController {
     }
 
     @GetMapping("/{eventId}")
-    public ResponseEntity<List<CommentResponse>> getCommentsByEventId(@PathVariable String eventId){
+    public ResponseEntity<List<CommentResponse>> getCommentsByEventId(@PathVariable UUID eventId){
         return commentService.getCommentsByEventId(eventId);
     }
 

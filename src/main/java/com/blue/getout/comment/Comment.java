@@ -17,7 +17,7 @@ import java.util.UUID;
 @Getter @Setter
 public class Comment {
     @Id
-    String id;
+    UUID id;
     ZonedDateTime timestamp;
     String text;
     @ManyToOne
@@ -30,10 +30,10 @@ public class Comment {
     Event event;
 
     public Comment(){
-        this.id = UUID.randomUUID().toString();
+        this.id = UUID.randomUUID();
     }
     public Comment(ZonedDateTime timestamp, String text, User user, Event event){
-        this.id = UUID.randomUUID().toString();
+        this.id = UUID.randomUUID();
         this.timestamp=timestamp;
         this.text=text;
         this.user=user;
