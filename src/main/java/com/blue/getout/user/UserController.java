@@ -1,8 +1,11 @@
 package com.blue.getout.user;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -18,6 +21,9 @@ public class UserController {
 
     @GetMapping("/me")
     public ResponseEntity<UserDTO> getUserProfile(final Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token expired or user not authenticated. Please sign in again.");
+        }
         return userService.getUserByUsername(authentication.getName());
     }
 
