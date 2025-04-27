@@ -44,4 +44,5 @@ public class User {
     private String avatarUrl;
     private String email;
     private String password;
+    private int elo;
 }

@@ -43,6 +43,7 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(userDTO.password()));
         user.setAvatarUrl(utils.getRandomAvatarUrl());
         user.setNotifications(new HashSet<>());
+        user.setElo(userDTO.elo());
         userRepository.save(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(getUserWithToken(user.getName()).getBody());
 
