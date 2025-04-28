@@ -4,6 +4,7 @@ public record RegistrationRequestDTO(
         String username,
         String email,
         String password,
-        int elo
+        int elo,
+        int avatarIndex
 ) {
 }

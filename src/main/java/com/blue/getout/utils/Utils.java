@@ -7,10 +7,16 @@ import java.time.format.DateTimeFormatter;
 
 @Component
 public class Utils {
+    private static final String AVATAR_URL = "https://getoutimages.blob.core.windows.net/avatars/";
+    private static final int AVATAR_COUNT = 36;
 
-    public String getRandomAvatarUrl(){
-        String AVATAR_URL = "https://getoutimages.blob.core.windows.net/avatars/";
-        int AVATAR_COUNT = 36;
+    //AvatarUrl for registered users
+    public String getAvatarUrl(int index){
+        return AVATAR_URL +index+".png";
+    }
+
+    //Random avatarUrl for Guest users
+    public String getAvatarUrl(){
         int index = (int) (Math.floor(Math.random() * AVATAR_COUNT)+1);
         return AVATAR_URL +index+".png";
     }

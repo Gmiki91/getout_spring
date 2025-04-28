@@ -41,7 +41,7 @@ public class AuthService {
         user.setName(userDTO.username());
         user.setEmail(userDTO.email());
         user.setPassword(passwordEncoder.encode(userDTO.password()));
-        user.setAvatarUrl(utils.getRandomAvatarUrl());
+        user.setAvatarUrl(utils.getAvatarUrl(userDTO.avatarIndex()));
         user.setNotifications(new HashSet<>());
         user.setElo(userDTO.elo());
         userRepository.save(user);

@@ -2,6 +2,7 @@ package com.blue.getout.user;
 
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
@@ -52,9 +53,19 @@ public class UserService {
         return ResponseEntity.ok(mapper.UserEntityToDTO(user));
     }
 
+    @Transactional
+    public ResponseEntity<UserDTO> changeAvatar(int index, Authentication authentication){
+        String username = authentication.getName();
+        User user = userRepository.findByName(username).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        String updatedAvatarUrl = utils.getAvatarUrl(index);
+        user.setAvatarUrl(updatedAvatarUrl);
+        userRepository.save(user);
+        return ResponseEntity.ok(mapper.UserEntityToDTO(user));
+    }
+
     private User createGuestUser() {
         String randomName = nameGenerator.generateRandomName();
-        String avatar = utils.getRandomAvatarUrl();
+        String avatar = utils.getAvatarUrl();
 
         User user = new User();
         user.setName(randomName);

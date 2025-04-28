@@ -31,4 +31,11 @@ public class UserController {
     public ResponseEntity<UserDTO> clearNotifications (@PathVariable UUID id){
         return userService.clearNotifications(id);
     }
+
+    @PutMapping("/changeAvatar/{index}")
+    public ResponseEntity<UserDTO> changeAvatar(@PathVariable int index, Authentication authentication){
+        return userService.changeAvatar(index, authentication);
+    }
+
+
 }
