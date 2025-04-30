@@ -15,6 +15,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,29 +38,38 @@ public class AuthService {
         if (userRepository.existsByName(userDTO.username()) || userRepository.existsByEmail(userDTO.email())) {
             throw new ValidationException("Username or Email already exists");
         }
+        String avatar = utils.getAvatarUrl();
         User user = new User();
         user.setName(userDTO.username());
         user.setEmail(userDTO.email());
         user.setPassword(passwordEncoder.encode(userDTO.password()));
-        user.setAvatarUrl(utils.getAvatarUrl(userDTO.avatarIndex()));
+        user.setAvatarUrl(avatar);
         user.setNotifications(new HashSet<>());
         user.setElo(userDTO.elo());
         userRepository.save(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(getUserWithToken(user.getName()).getBody());
 
     }
-    public ResponseEntity<AuthenticatedUserDTO> login(AuthenticationRequestDTO request){
+    public ResponseEntity<AuthenticatedUserDTO> login(AuthenticationRequestDTO request) {
         final var authToken = UsernamePasswordAuthenticationToken.unauthenticated(request.username(), request.password());
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            try {
-                authentication = authenticationManager.authenticate(authToken);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            } catch (AuthenticationException e) {
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password", e);
-            }
+        try {
+            Authentication authentication = authenticationManager.authenticate(authToken);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            return this.getUserWithToken(request.username());
+        } catch (AuthenticationException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password", e);
         }
-        return this.getUserWithToken(request.username());
+    }
+
+    public ResponseEntity<AuthenticatedUserDTO> changePassword(String password, Authentication authentication) {
+        String username = authentication.getName();
+        User user = userRepository.findByName(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        user.setPassword(passwordEncoder.encode(password));
+        userRepository.save(user);
+
+        return getUserWithToken(user.getName());
     }
 
     private ResponseEntity<AuthenticatedUserDTO> getUserWithToken(String username){

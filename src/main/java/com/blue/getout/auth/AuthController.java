@@ -1,6 +1,7 @@
 package com.blue.getout.auth;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +23,11 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<AuthenticatedUserDTO> registerUser(@Valid @RequestBody final RegistrationRequestDTO registrationDTO) {
        return authService.register(registrationDTO);
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<AuthenticatedUserDTO> changePassword(@RequestBody PasswordDTO dto,  Authentication authentication) {
+        return authService.changePassword(dto.password(), authentication);
     }
 
 }
