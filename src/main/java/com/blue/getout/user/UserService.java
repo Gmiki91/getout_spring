@@ -63,6 +63,15 @@ public class UserService {
         return ResponseEntity.ok(mapper.UserEntityToDTO(user));
     }
 
+    @Transactional
+    public ResponseEntity<UserDTO> changeElo(int value, Authentication authentication){
+        String username = authentication.getName();
+        User user = userRepository.findByName(username).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        user.setElo(value);
+        userRepository.save(user);
+        return ResponseEntity.ok(mapper.UserEntityToDTO(user));
+    }
+
     private User createGuestUser() {
         String randomName = nameGenerator.generateRandomName();
         String avatar = utils.getAvatarUrl();

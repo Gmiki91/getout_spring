@@ -37,5 +37,10 @@ public class UserController {
         return userService.changeAvatar(index, authentication);
     }
 
+    @PutMapping("/changeElo/{value}")
+    public ResponseEntity<UserDTO> changeElo(@PathVariable int value, Authentication authentication){
+        return userService.changeElo(value, authentication);
+    }
+
 
 }
