@@ -1,5 +1,7 @@
 package com.blue.getout.auth;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,8 +18,8 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<AuthenticatedUserDTO> login(@RequestBody final AuthenticationRequestDTO authenticationRequestDto) {
-        return authService.login(authenticationRequestDto);
+    public ResponseEntity<AuthenticatedUserDTO> login(@RequestBody final AuthenticationRequestDTO authenticationRequestDto,  HttpServletResponse response) {
+        return authService.login(authenticationRequestDto,response);
     }
 
     @PostMapping("/register")
@@ -28,6 +30,11 @@ public class AuthController {
     @PostMapping("/change-password")
     public ResponseEntity<AuthenticatedUserDTO> changePassword(@RequestBody PasswordDTO dto,  Authentication authentication) {
         return authService.changePassword(dto.password(), authentication);
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<AuthenticatedUserDTO> refreshToken(HttpServletRequest request) {
+        return authService.refreshToken(request);
     }
 
 }

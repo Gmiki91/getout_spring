@@ -6,6 +6,9 @@ import com.blue.getout.user.UserDTO;
 import com.blue.getout.user.UserRepository;
 import com.blue.getout.utils.Mapper;
 import com.blue.getout.utils.Utils;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -50,11 +53,13 @@ public class AuthService {
         return ResponseEntity.status(HttpStatus.CREATED).body(getUserWithToken(user.getName()).getBody());
 
     }
-    public ResponseEntity<AuthenticatedUserDTO> login(AuthenticationRequestDTO request) {
+    public ResponseEntity<AuthenticatedUserDTO> login(AuthenticationRequestDTO request, HttpServletResponse response) {
         final var authToken = UsernamePasswordAuthenticationToken.unauthenticated(request.username(), request.password());
         try {
             Authentication authentication = authenticationManager.authenticate(authToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
+            String refreshToken = jwtService.generateRefreshToken(request.username());
+            addRefreshTokenToCookie(response, refreshToken);
             return this.getUserWithToken(request.username());
         } catch (AuthenticationException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password", e);
@@ -72,13 +77,58 @@ public class AuthService {
         return getUserWithToken(user.getName());
     }
 
+    public ResponseEntity<AuthenticatedUserDTO>refreshToken(HttpServletRequest request){
+        String refreshToken = getRefreshTokenFromCookies(request);
+
+        String username = jwtService.extractUsername(refreshToken);
+
+        User user = userRepository.findByName(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        assert refreshToken != null;
+        if (!refreshToken.equals(user.getRefreshToken()) || !jwtService.isTokenValid(refreshToken, username)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
+        }
+
+        return getUserWithToken(username);
+    }
+
     private ResponseEntity<AuthenticatedUserDTO> getUserWithToken(String username){
-        final var token = jwtService.generateToken(username);
-        UserDTO user =  userRepository.findByName(username)
-                .map(mapper::UserEntityToDTO)
+        String accessToken = jwtService.generateToken(username);
+        String refreshToken = jwtService.generateRefreshToken(username);
+
+        User user = userRepository.findByName(username)
                 .orElseThrow(() -> new IllegalStateException("Authenticated user not found in the database"));
 
-        AuthenticatedUserDTO response = new AuthenticatedUserDTO(user,token);
+        user.setRefreshToken(refreshToken);
+        userRepository.save(user);
+
+        UserDTO userDTO = mapper.UserEntityToDTO(user);
+
+        AuthenticatedUserDTO response = new AuthenticatedUserDTO(userDTO,accessToken,refreshToken);
         return ResponseEntity.ok(response);
     }
+
+    private String getRefreshTokenFromCookies(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("refresh_token".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
+    }
+
+    private void addRefreshTokenToCookie(HttpServletResponse response, String refreshToken) {
+        Cookie cookie = new Cookie("refresh_token", refreshToken);
+        cookie.setHttpOnly(true); // Ensure the cookie is only accessible by the backend
+        cookie.setSecure(true); // Ensure the cookie is only sent over HTTPS
+        cookie.setPath("/"); // Make the cookie available across the entire domain
+        cookie.setMaxAge(30 * 24 * 60 * 60); // Set expiration for 30 days
+        response.addCookie(cookie);
+    }
+
+
 }

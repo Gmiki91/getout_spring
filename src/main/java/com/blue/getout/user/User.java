@@ -41,6 +41,9 @@ public class User {
     @JsonManagedReference("user-participants")
     private Set<Event> joinedEvents;
 
+    @Column(length = 1000)
+    private String refreshToken;
+
     private String avatarUrl;
     private String email;
     private String password;
