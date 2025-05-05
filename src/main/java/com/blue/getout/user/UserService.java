@@ -3,7 +3,6 @@ package com.blue.getout.user;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +12,6 @@ import java.util.UUID;
 import com.blue.getout.utils.Mapper;
 import com.blue.getout.utils.NameGenerator;
 import com.blue.getout.utils.Utils;
-import static org.springframework.http.HttpStatus.GONE;
 
 @RequiredArgsConstructor
 @Service
@@ -37,12 +35,6 @@ public class UserService {
             return ResponseEntity.ok(mapper.UserEntityToDTO(newUser));
         }
     }
-
-    public ResponseEntity<UserDTO> getUserByUsername(final String username) {
-        User user = userRepository.findByName(username).orElseThrow(() -> new ResponseStatusException(GONE, "The user account has been deleted or inactivated"));
-        return ResponseEntity.ok(mapper.UserEntityToDTO(user));
-    }
-
     @Transactional
     public ResponseEntity<UserDTO> clearNotifications(UUID id) {
         User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));

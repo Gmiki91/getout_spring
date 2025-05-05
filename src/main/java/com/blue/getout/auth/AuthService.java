@@ -11,7 +11,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -37,7 +39,7 @@ public class AuthService {
     private final Mapper mapper;
 
     @Transactional
-    public ResponseEntity<AuthenticatedUserDTO> register(RegistrationRequestDTO userDTO) {
+    public ResponseEntity<AuthenticatedUserDTO> register(RegistrationRequestDTO userDTO,HttpServletResponse response) {
         if (userRepository.existsByName(userDTO.username()) || userRepository.existsByEmail(userDTO.email())) {
             throw new ValidationException("Username or Email already exists");
         }
@@ -50,7 +52,8 @@ public class AuthService {
         user.setNotifications(new HashSet<>());
         user.setElo(userDTO.elo());
         userRepository.save(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(getUserWithToken(user.getName()).getBody());
+        String refreshToken = generateRefreshToken(userDTO.username(),response);
+        return this.getUserWithToken(user.getName(),refreshToken);
 
     }
     public ResponseEntity<AuthenticatedUserDTO> login(AuthenticationRequestDTO request, HttpServletResponse response) {
@@ -58,23 +61,27 @@ public class AuthService {
         try {
             Authentication authentication = authenticationManager.authenticate(authToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            String refreshToken = jwtService.generateRefreshToken(request.username());
-            addRefreshTokenToCookie(response, refreshToken);
-            return this.getUserWithToken(request.username());
+            String refreshToken = generateRefreshToken(request.username(),response);
+            return this.getUserWithToken(request.username(),refreshToken);
         } catch (AuthenticationException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password", e);
         }
     }
 
-    public ResponseEntity<AuthenticatedUserDTO> changePassword(String password, Authentication authentication) {
+    public ResponseEntity<AuthenticatedUserDTO> getMe(final String username,HttpServletResponse response) {
+        String refreshToken = generateRefreshToken(username,response);
+        return this.getUserWithToken(username,refreshToken);
+    }
+
+    public ResponseEntity<AuthenticatedUserDTO> changePassword(String password, Authentication authentication, HttpServletResponse response) {
         String username = authentication.getName();
         User user = userRepository.findByName(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
-
-        return getUserWithToken(user.getName());
+        String refreshToken = generateRefreshToken(username, response);
+        return getUserWithToken(username,refreshToken);
     }
 
     public ResponseEntity<AuthenticatedUserDTO>refreshToken(HttpServletRequest request){
@@ -90,12 +97,11 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
         }
 
-        return getUserWithToken(username);
+        return getUserWithToken(username, refreshToken);
     }
 
-    private ResponseEntity<AuthenticatedUserDTO> getUserWithToken(String username){
+    private ResponseEntity<AuthenticatedUserDTO> getUserWithToken(String username, String refreshToken){
         String accessToken = jwtService.generateToken(username);
-        String refreshToken = jwtService.generateRefreshToken(username);
 
         User user = userRepository.findByName(username)
                 .orElseThrow(() -> new IllegalStateException("Authenticated user not found in the database"));
@@ -105,8 +111,14 @@ public class AuthService {
 
         UserDTO userDTO = mapper.UserEntityToDTO(user);
 
-        AuthenticatedUserDTO response = new AuthenticatedUserDTO(userDTO,accessToken,refreshToken);
+        AuthenticatedUserDTO response = new AuthenticatedUserDTO(userDTO,accessToken);
         return ResponseEntity.ok(response);
+    }
+
+    private String generateRefreshToken(String username,HttpServletResponse response){
+        String refreshToken = jwtService.generateRefreshToken(username);
+        addRefreshTokenToCookie(response, refreshToken);
+        return refreshToken;
     }
 
     private String getRefreshTokenFromCookies(HttpServletRequest request) {
@@ -122,13 +134,14 @@ public class AuthService {
     }
 
     private void addRefreshTokenToCookie(HttpServletResponse response, String refreshToken) {
-        Cookie cookie = new Cookie("refresh_token", refreshToken);
-        cookie.setHttpOnly(true); // Ensure the cookie is only accessible by the backend
-        cookie.setSecure(true); // Ensure the cookie is only sent over HTTPS
-        cookie.setPath("/"); // Make the cookie available across the entire domain
-        cookie.setMaxAge(30 * 24 * 60 * 60); // Set expiration for 30 days
-        response.addCookie(cookie);
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", refreshToken)
+                .httpOnly(true)
+                .secure(true) // change to true for production
+                .maxAge(30 * 24 * 60 * 60) // 30 days
+                .path("/") // Make the cookie available across the entire domain
+                .sameSite("None")
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
-
-
 }
