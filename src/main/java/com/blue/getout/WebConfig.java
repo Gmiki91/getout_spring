@@ -11,7 +11,8 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("https://localhost:4200","https://localhost:4000", "https://getout-ng.azurewebsites.net","https://signsign.azurewebsites.net")
+                .allowedOrigins("http://localhost:4200","http://localhost:4000","https://localhost:4200","https://localhost:4000",
+                        "https://getout-ng.azurewebsites.net","https://signsign.azurewebsites.net")
                 .allowCredentials(true)
                 .allowedMethods("GET", "POST", "PUT","PATCH", "DELETE", "OPTIONS");
     }
