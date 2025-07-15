@@ -9,7 +9,6 @@ import com.blue.getout.utils.Utils;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -41,7 +40,7 @@ public class AuthService {
     @Transactional
     public ResponseEntity<AuthenticatedUserDTO> register(RegistrationRequestDTO userDTO,HttpServletResponse response) {
         if (userRepository.existsByName(userDTO.username()) || userRepository.existsByEmail(userDTO.email())) {
-            throw new ValidationException("Username or Email already exists");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"Username or Email already exists");
         }
         String avatar = utils.getAvatarUrl();
         User user = new User();
