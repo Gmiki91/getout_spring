@@ -16,11 +16,7 @@ public interface EventRepository extends JpaRepository<Event,UUID> {
 
     // Find events the user has joined
     @Query("SELECT e FROM Event e JOIN e.participants u WHERE u.id = :userId")
-    List<Event> findEventsJoinedByUser(@Param("userId") UUID userId, Sort sort);
-
-    // Find events the user has not joined
-    @Query("SELECT e FROM Event e WHERE e.id NOT IN (SELECT e2.id FROM Event e2 JOIN e2.participants u WHERE u.id = :userId)")
-    List<Event> findEventsNotJoinedByUser(@Param("userId") UUID userId,Sort sort);
+    List<Event> findEventsJoinedByUser(@Param("userId") UUID userId);
 
     // Find events older than timeLimit and not recurring
     @Query("SELECT e FROM Event e WHERE e.endTime < :timeLimit AND e.recurring = 'never'")

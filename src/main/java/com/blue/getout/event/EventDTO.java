@@ -7,4 +7,4 @@ import java.util.Set;
 import java.util.UUID;
 
 public record EventDTO (UUID id,String title,String location,LatLng latLng,ZonedDateTime time,ZonedDateTime endTime,
-                        Set<UserDTO> participants, int min, int max, String info,String recurring, UUID ownerId) {}
+                        Set<UserDTO> participants, int min, int max, String info,String recurring, UUID ownerId, boolean joined) {}

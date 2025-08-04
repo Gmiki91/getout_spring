@@ -11,7 +11,7 @@ import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class EventService {
@@ -27,18 +27,16 @@ public class EventService {
         this.utils=utils;
     }
 
-    public Map<String, List<EventDTO>> getEventsForUser(UUID userId) {
+    public List<EventDTO> getEventsForUser(UUID userId) {
+        List<Event> allEvents = eventRepository.findAll(Sort.by(Sort.Direction.ASC, "time"));
+        Set<UUID> joinedEventIds = eventRepository.findEventsJoinedByUser(userId)
+                .stream()
+                .map(Event::getId)
+                .collect(Collectors.toSet());
 
-        List<EventDTO> joinedEvents = getEvents(
-                id -> eventRepository.findEventsJoinedByUser(id, Sort.by(Sort.Direction.ASC, "time")), userId);
-
-        List<EventDTO> otherEvents = getEvents(
-                id -> eventRepository.findEventsNotJoinedByUser(id, Sort.by(Sort.Direction.ASC, "time")), userId);
-
-        Map<String, List<EventDTO>> result = new HashMap<>();
-        result.put("joinedEvents", joinedEvents);
-        result.put("otherEvents", otherEvents);
-        return result;
+        return allEvents.stream()
+                .map(event -> mapper.EventEntityToDTO(event, joinedEventIds.contains(event.getId())))
+                .toList();
     }
 
     public ResponseEntity<EventDTO> patchEvent(UUID eventId, Map<String, Object> updates) {
@@ -62,12 +60,5 @@ public class EventService {
 
         EventDTO response = mapper.EventEntityToDTO(updatedEvent);
         return ResponseEntity.ok(response);
-    }
-
-    private List<EventDTO> getEvents(Function<UUID, List<Event>> eventFinder, UUID userId) {
-        return eventFinder.apply(userId)
-                .stream()
-                .map(mapper::EventEntityToDTO)
-                .toList();
     }
 }

@@ -67,7 +67,7 @@ public class UserEventService {
 
         if (userModified && eventModified) {
             userRepository.save(user);
-            EventDTO eventDTO = mapper.EventEntityToDTO(event);
+            EventDTO eventDTO = mapper.EventEntityToDTO(event,isJoining);
             return ResponseEntity.ok(eventDTO);
         } else {
             throw new IllegalArgumentException("The list did not contain the entity.");

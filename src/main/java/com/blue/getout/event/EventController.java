@@ -16,8 +16,8 @@ public class EventController {
         this.eventService=eventService;
     }
     @GetMapping("/user/{userId}")
-    public ResponseEntity<Map<String, List<EventDTO>>> getFilteredEvents(@PathVariable UUID userId){
-        Map<String, List<EventDTO>> result = eventService.getEventsForUser(userId);
+    public ResponseEntity <List<EventDTO>> getFilteredEvents(@PathVariable UUID userId){
+         List<EventDTO> result = eventService.getEventsForUser(userId);
         return ResponseEntity.ok(result);
     }
 

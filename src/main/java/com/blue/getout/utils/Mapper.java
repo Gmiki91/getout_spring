@@ -20,7 +20,10 @@ public class Mapper {
         return new UserDTO(user.getId(), user.getName(), user.getEmail(), user.getElo(), user.getAvatarUrl(), setNotifications(user.getNotifications()));
     }
 
-    public EventDTO EventEntityToDTO(Event event) {
+    public EventDTO EventEntityToDTO(Event event){
+        return EventEntityToDTO(event,false);
+    }
+    public EventDTO EventEntityToDTO(Event event,boolean joined) {
         return new EventDTO(
                 event.getId(),
                 event.getTitle(),
@@ -33,7 +36,8 @@ public class Mapper {
                 event.getMax(),
                 event.getInfo(),
                 event.getRecurring(),
-                event.getOwner().getId());
+                event.getOwner().getId(),
+                joined);
     }
 
     public Event EventDTOToEntity(EventDTO eventData, User user) {
