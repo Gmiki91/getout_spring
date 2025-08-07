@@ -45,4 +45,15 @@ public class AuthController {
         return authService.getMe(authentication.getName(),response);
     }
 
+    @PostMapping("/confirm-email")
+    public ResponseEntity<String> confirmEmail(@RequestParam String token) {
+        return authService.confirmEmail(token);
+    }
+
+    @PostMapping("/resend-confirmation")
+    public ResponseEntity<String> resendConfirmation(@RequestBody ResendConfirmationRequestDTO request) {
+        authService.resendConfirmation(request.email());
+        return ResponseEntity.ok("Confirmation email resent");
+    }
+
 }

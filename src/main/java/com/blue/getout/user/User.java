@@ -47,5 +47,6 @@ public class User {
     private String avatarUrl;
     private String email;
     private String password;
+    private boolean emailVerified = false;
     private int elo;
 }

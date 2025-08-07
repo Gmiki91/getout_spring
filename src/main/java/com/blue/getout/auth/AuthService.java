@@ -14,6 +14,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -24,8 +25,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.SimpleMailMessage;
+import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -33,9 +38,11 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final VerificationTokenRepository tokenRepository;
     private final JwtService jwtService;
     private final Utils utils;
     private final Mapper mapper;
+    private final JavaMailSender mailSender;
 
     @Transactional
     public ResponseEntity<AuthenticatedUserDTO> register(RegistrationRequestDTO userDTO,HttpServletResponse response) {
@@ -50,16 +57,70 @@ public class AuthService {
         user.setAvatarUrl(avatar);
         user.setNotifications(new HashSet<>());
         user.setElo(userDTO.elo());
+        user.setEmailVerified(false);
         userRepository.save(user);
+
         String refreshToken = generateRefreshToken(userDTO.username(),response);
+        String token = UUID.randomUUID().toString();
+        VerificationToken verificationToken = new VerificationToken(token, user, LocalDateTime.now().plusHours(24));
+        tokenRepository.save(verificationToken);
+        sendEmail(user.getEmail(), token);
+
         return this.getUserWithToken(user.getName(),refreshToken);
 
+    }
+
+    public ResponseEntity<String> confirmEmail(String token) {
+        VerificationToken vToken = tokenRepository.findByToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid token"));
+
+        if (vToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Token expired");
+        }
+
+        User user = vToken.getUser();
+        user.setEmailVerified(true);
+        userRepository.save(user);
+        tokenRepository.delete(vToken);
+
+        return ResponseEntity.ok("Email confirmed");
+    }
+
+    public void resendConfirmation(String email){
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.isEmailVerified()) {
+            throw new RuntimeException("Email is already verified");
+        }
+
+        // Invalidate existing tokens
+        tokenRepository.deleteByUser(user);
+
+        // Create new token
+        String token = UUID.randomUUID().toString();
+        VerificationToken newToken = new VerificationToken(token,user,LocalDateTime.now().plusHours(24));
+        tokenRepository.save(newToken);
+
+        // Send confirmation email
+        sendEmail(user.getEmail(), token);
     }
     public ResponseEntity<AuthenticatedUserDTO> login(AuthenticationRequestDTO request, HttpServletResponse response) {
         final var authToken = UsernamePasswordAuthenticationToken.unauthenticated(request.username(), request.password());
         try {
+            //Authentication
             Authentication authentication = authenticationManager.authenticate(authToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            //Email validation
+            User user = userRepository.findByName(request.username())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
+
+            if (!user.isEmailVerified()) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Email not verified");
+            }
+
+            //Generate Token
             String refreshToken = generateRefreshToken(request.username(),response);
             return this.getUserWithToken(request.username(),refreshToken);
         } catch (AuthenticationException e) {
@@ -97,6 +158,15 @@ public class AuthService {
         }
 
         return getUserWithToken(username, refreshToken);
+    }
+
+    private void sendEmail(String to, String token) {
+        String url = "https://signsign.azurewebsites.net/confirm-email?token=" + token;
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject("Confirm your email");
+        message.setText("Click the link to confirm your email: " + url);
+        mailSender.send(message);
     }
 
     private ResponseEntity<AuthenticatedUserDTO> getUserWithToken(String username, String refreshToken){
@@ -142,5 +212,14 @@ public class AuthService {
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    }
+
+    @Transactional
+    @Scheduled(cron = "@daily")
+    public void deleteOldTokens() {
+        List<VerificationToken> oldTokens = tokenRepository.findExpiredTokens(LocalDateTime.now());
+        if (!oldTokens.isEmpty()) {
+            tokenRepository.deleteAll(oldTokens);
+        }
     }
 }
