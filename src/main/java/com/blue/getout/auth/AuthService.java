@@ -45,9 +45,9 @@ public class AuthService {
     private final JavaMailSender mailSender;
 
     @Transactional
-    public ResponseEntity<AuthenticatedUserDTO> register(RegistrationRequestDTO userDTO,HttpServletResponse response) {
+    public ResponseEntity<String> register(RegistrationRequestDTO userDTO, HttpServletResponse response) {
         if (userRepository.existsByName(userDTO.username()) || userRepository.existsByEmail(userDTO.email())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,"Username or Email already exists");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username or Email already exists");
         }
         String avatar = utils.getAvatarUrl();
         User user = new User();
@@ -60,14 +60,10 @@ public class AuthService {
         user.setEmailVerified(false);
         userRepository.save(user);
 
-        String refreshToken = generateRefreshToken(userDTO.username(),response);
         String token = UUID.randomUUID().toString();
         VerificationToken verificationToken = new VerificationToken(token, user, LocalDateTime.now().plusHours(24));
         tokenRepository.save(verificationToken);
-        sendEmail(user.getEmail(), token);
-
-        return this.getUserWithToken(user.getName(),refreshToken);
-
+        return sendEmail(user.getEmail(), token);
     }
 
     public ResponseEntity<String> confirmEmail(String token) {
@@ -86,7 +82,7 @@ public class AuthService {
         return ResponseEntity.ok("Email confirmed");
     }
 
-    public void resendConfirmation(String email){
+    public ResponseEntity<String> resendConfirmation(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -99,12 +95,13 @@ public class AuthService {
 
         // Create new token
         String token = UUID.randomUUID().toString();
-        VerificationToken newToken = new VerificationToken(token,user,LocalDateTime.now().plusHours(24));
+        VerificationToken newToken = new VerificationToken(token, user, LocalDateTime.now().plusHours(24));
         tokenRepository.save(newToken);
 
         // Send confirmation email
-        sendEmail(user.getEmail(), token);
+        return sendEmail(user.getEmail(), token);
     }
+
     public ResponseEntity<AuthenticatedUserDTO> login(AuthenticationRequestDTO request, HttpServletResponse response) {
         final var authToken = UsernamePasswordAuthenticationToken.unauthenticated(request.username(), request.password());
         try {
@@ -121,16 +118,16 @@ public class AuthService {
             }
 
             //Generate Token
-            String refreshToken = generateRefreshToken(request.username(),response);
-            return this.getUserWithToken(request.username(),refreshToken);
+            String refreshToken = generateRefreshToken(request.username(), response);
+            return this.getUserWithToken(request.username(), refreshToken);
         } catch (AuthenticationException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password", e);
         }
     }
 
-    public ResponseEntity<AuthenticatedUserDTO> getMe(final String username,HttpServletResponse response) {
-        String refreshToken = generateRefreshToken(username,response);
-        return this.getUserWithToken(username,refreshToken);
+    public ResponseEntity<AuthenticatedUserDTO> getMe(final String username, HttpServletResponse response) {
+        String refreshToken = generateRefreshToken(username, response);
+        return this.getUserWithToken(username, refreshToken);
     }
 
     public ResponseEntity<AuthenticatedUserDTO> changePassword(String password, Authentication authentication, HttpServletResponse response) {
@@ -141,10 +138,10 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
         String refreshToken = generateRefreshToken(username, response);
-        return getUserWithToken(username,refreshToken);
+        return getUserWithToken(username, refreshToken);
     }
 
-    public ResponseEntity<AuthenticatedUserDTO>refreshToken(HttpServletRequest request){
+    public ResponseEntity<AuthenticatedUserDTO> refreshToken(HttpServletRequest request) {
         String refreshToken = getRefreshTokenFromCookies(request);
 
         String username = jwtService.extractUsername(refreshToken);
@@ -160,16 +157,21 @@ public class AuthService {
         return getUserWithToken(username, refreshToken);
     }
 
-    private void sendEmail(String to, String token) {
-        String url = "https://signsign.azurewebsites.net/confirm-email?token=" + token;
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(to);
-        message.setSubject("Confirm your email");
-        message.setText("Click the link to confirm your email: " + url);
-        mailSender.send(message);
+    private ResponseEntity<String> sendEmail(String to, String token) {
+        try {
+            String url = "https://signsign.azurewebsites.net/confirm-email?token=" + token;
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(to);
+            message.setSubject("Confirm your email");
+            message.setText("Click the link to confirm your email: " + url);
+            mailSender.send(message);
+            return ResponseEntity.ok("Email sent successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to send email: " + e.getMessage());
+        }
     }
 
-    private ResponseEntity<AuthenticatedUserDTO> getUserWithToken(String username, String refreshToken){
+    private ResponseEntity<AuthenticatedUserDTO> getUserWithToken(String username, String refreshToken) {
         String accessToken = jwtService.generateToken(username);
 
         User user = userRepository.findByName(username)
@@ -180,11 +182,11 @@ public class AuthService {
 
         UserDTO userDTO = mapper.UserEntityToDTO(user);
 
-        AuthenticatedUserDTO response = new AuthenticatedUserDTO(userDTO,accessToken);
+        AuthenticatedUserDTO response = new AuthenticatedUserDTO(userDTO, accessToken);
         return ResponseEntity.ok(response);
     }
 
-    private String generateRefreshToken(String username,HttpServletResponse response){
+    private String generateRefreshToken(String username, HttpServletResponse response) {
         String refreshToken = jwtService.generateRefreshToken(username);
         addRefreshTokenToCookie(response, refreshToken);
         return refreshToken;

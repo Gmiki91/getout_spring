@@ -1,10 +1,10 @@
 package com.blue.getout.auth;
 
-import com.blue.getout.user.UserDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -16,14 +16,13 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
-
     @PostMapping("/login")
     public ResponseEntity<AuthenticatedUserDTO> login(@RequestBody final AuthenticationRequestDTO authenticationRequestDto,  HttpServletResponse response) {
         return authService.login(authenticationRequestDto,response);
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthenticatedUserDTO> registerUser(@Valid @RequestBody final RegistrationRequestDTO registrationDTO, HttpServletResponse response) {
+    public ResponseEntity<String> registerUser(@Valid @RequestBody final RegistrationRequestDTO registrationDTO, HttpServletResponse response) {
        return authService.register(registrationDTO, response);
     }
 
@@ -52,8 +51,6 @@ public class AuthController {
 
     @PostMapping("/resend-confirmation")
     public ResponseEntity<String> resendConfirmation(@RequestBody ResendConfirmationRequestDTO request) {
-        authService.resendConfirmation(request.email());
-        return ResponseEntity.ok("Confirmation email resent");
+        return authService.resendConfirmation(request.email());
     }
-
 }
