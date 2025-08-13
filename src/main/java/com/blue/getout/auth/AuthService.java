@@ -45,7 +45,7 @@ public class AuthService {
     private final JavaMailSender mailSender;
 
     @Transactional
-    public ResponseEntity<String> register(RegistrationRequestDTO userDTO, HttpServletResponse response) {
+    public ResponseEntity<MessageResponse> register(RegistrationRequestDTO userDTO, HttpServletResponse response) {
         if (userRepository.existsByName(userDTO.username()) || userRepository.existsByEmail(userDTO.email())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Username or Email already exists");
         }
@@ -66,7 +66,7 @@ public class AuthService {
         return sendEmail(user.getEmail(), token);
     }
 
-    public ResponseEntity<String> confirmEmail(String token) {
+    public ResponseEntity<MessageResponse> confirmEmail(String token) {
         VerificationToken vToken = tokenRepository.findByToken(token)
                 .orElseThrow(() -> new RuntimeException("Invalid token"));
 
@@ -79,10 +79,10 @@ public class AuthService {
         userRepository.save(user);
         tokenRepository.delete(vToken);
 
-        return ResponseEntity.ok("Email confirmed");
+        return ResponseEntity.ok(new MessageResponse("Email confirmed"));
     }
 
-    public ResponseEntity<String> resendConfirmation(String email) {
+    public ResponseEntity<MessageResponse> resendConfirmation(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -157,7 +157,7 @@ public class AuthService {
         return getUserWithToken(username, refreshToken);
     }
 
-    private ResponseEntity<String> sendEmail(String to, String token) {
+    private ResponseEntity<MessageResponse> sendEmail(String to, String token) {
         try {
             String url = "https://signsign.azurewebsites.net/confirm-email?token=" + token;
             SimpleMailMessage message = new SimpleMailMessage();
@@ -165,9 +165,9 @@ public class AuthService {
             message.setSubject("Confirm your email");
             message.setText("Click the link to confirm your email: " + url);
             mailSender.send(message);
-            return ResponseEntity.ok("Email sent successfully");
+            return ResponseEntity.ok(new MessageResponse("Email sent successfully"));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to send email: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MessageResponse("Failed to send email: " + e.getMessage()));
         }
     }
 

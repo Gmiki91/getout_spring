@@ -22,7 +22,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> registerUser(@Valid @RequestBody final RegistrationRequestDTO registrationDTO, HttpServletResponse response) {
+    public ResponseEntity<MessageResponse> registerUser(@Valid @RequestBody final RegistrationRequestDTO registrationDTO, HttpServletResponse response) {
        return authService.register(registrationDTO, response);
     }
 
@@ -44,13 +44,13 @@ public class AuthController {
         return authService.getMe(authentication.getName(),response);
     }
 
-    @PostMapping("/confirm-email")
-    public ResponseEntity<String> confirmEmail(@RequestParam String token) {
+    @GetMapping("/confirm-email")
+    public ResponseEntity<MessageResponse> confirmEmail(@RequestParam String token) {
         return authService.confirmEmail(token);
     }
 
     @PostMapping("/resend-confirmation")
-    public ResponseEntity<String> resendConfirmation(@RequestBody ResendConfirmationRequestDTO request) {
+    public ResponseEntity<MessageResponse> resendConfirmation(@RequestBody ResendConfirmationRequestDTO request) {
         return authService.resendConfirmation(request.email());
     }
 }
