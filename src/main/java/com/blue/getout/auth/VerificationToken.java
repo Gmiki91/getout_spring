@@ -4,11 +4,11 @@ import com.blue.getout.user.User;
 import jakarta.persistence.*;
 import lombok.Setter;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 @Getter
 @Setter
-@RequiredArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "tokens")
 public class VerificationToken {
@@ -17,11 +17,17 @@ public class VerificationToken {
         private Long id;
 
         @Column(nullable = false, unique = true)
-        private final String token;
+        private  String token;
 
         @OneToOne
-        private final User user;
+        private  User user;
 
-        private final LocalDateTime expiryDate;
+        private  LocalDateTime expiryDate;
+
+        public VerificationToken(String token, User user, LocalDateTime expiryDate) {
+                this.token = token;
+                this.user = user;
+                this.expiryDate = expiryDate;
+        }
     }
 
