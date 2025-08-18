@@ -103,14 +103,14 @@ public class AuthService {
     }
 
     public ResponseEntity<AuthenticatedUserDTO> login(AuthenticationRequestDTO request, HttpServletResponse response) {
-        final var authToken = UsernamePasswordAuthenticationToken.unauthenticated(request.username(), request.password());
+        final var authToken = UsernamePasswordAuthenticationToken.unauthenticated(request.email(), request.password());
         try {
             //Authentication
             Authentication authentication = authenticationManager.authenticate(authToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             //Email validation
-            User user = userRepository.findByName(request.username())
+            User user = userRepository.findByEmail(request.email())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
 
             if (!user.isEmailVerified()) {
@@ -118,43 +118,43 @@ public class AuthService {
             }
 
             //Generate Token
-            String refreshToken = generateRefreshToken(request.username(), response);
-            return this.getUserWithToken(request.username(), refreshToken);
+            String refreshToken = generateRefreshToken(request.email(), response);
+            return this.getUserWithToken(request.email(), refreshToken);
         } catch (AuthenticationException e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password", e);
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password", e);
         }
     }
 
-    public ResponseEntity<AuthenticatedUserDTO> getMe(final String username, HttpServletResponse response) {
-        String refreshToken = generateRefreshToken(username, response);
-        return this.getUserWithToken(username, refreshToken);
+    public ResponseEntity<AuthenticatedUserDTO> getMe(final String email, HttpServletResponse response) {
+        String refreshToken = generateRefreshToken(email, response);
+        return this.getUserWithToken(email, refreshToken);
     }
 
     public ResponseEntity<AuthenticatedUserDTO> changePassword(String password, Authentication authentication, HttpServletResponse response) {
-        String username = authentication.getName();
-        User user = userRepository.findByName(username)
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
-        String refreshToken = generateRefreshToken(username, response);
-        return getUserWithToken(username, refreshToken);
+        String refreshToken = generateRefreshToken(email, response);
+        return getUserWithToken(email, refreshToken);
     }
 
     public ResponseEntity<AuthenticatedUserDTO> refreshToken(HttpServletRequest request) {
         String refreshToken = getRefreshTokenFromCookies(request);
 
-        String username = jwtService.extractUsername(refreshToken);
+        String email = jwtService.extractEmail(refreshToken);
 
-        User user = userRepository.findByName(username)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         assert refreshToken != null;
-        if (!refreshToken.equals(user.getRefreshToken()) || !jwtService.isTokenValid(refreshToken, username)) {
+        if (!refreshToken.equals(user.getRefreshToken()) || !jwtService.isTokenValid(refreshToken, email)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
         }
 
-        return getUserWithToken(username, refreshToken);
+        return getUserWithToken(email, refreshToken);
     }
 
     private ResponseEntity<MessageResponse> sendEmail(String to, String token) {
@@ -171,10 +171,10 @@ public class AuthService {
         }
     }
 
-    private ResponseEntity<AuthenticatedUserDTO> getUserWithToken(String username, String refreshToken) {
-        String accessToken = jwtService.generateToken(username);
+    private ResponseEntity<AuthenticatedUserDTO> getUserWithToken(String email, String refreshToken) {
+        String accessToken = jwtService.generateToken(email);
 
-        User user = userRepository.findByName(username)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("Authenticated user not found in the database"));
 
         user.setRefreshToken(refreshToken);
@@ -186,8 +186,8 @@ public class AuthService {
         return ResponseEntity.ok(response);
     }
 
-    private String generateRefreshToken(String username, HttpServletResponse response) {
-        String refreshToken = jwtService.generateRefreshToken(username);
+    private String generateRefreshToken(String email, HttpServletResponse response) {
+        String refreshToken = jwtService.generateRefreshToken(email);
         addRefreshTokenToCookie(response, refreshToken);
         return refreshToken;
     }

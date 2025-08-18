@@ -41,7 +41,7 @@ public class AuthController {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token expired or user not authenticated. Please sign in again.");
         }
-        return authService.getMe(authentication.getName(),response);
+        return authService.getMe(authentication.getName(),response); //getName() returns the email
     }
 
     @GetMapping("/confirm-email")

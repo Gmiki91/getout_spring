@@ -47,8 +47,8 @@ public class UserService {
 
     @Transactional
     public ResponseEntity<UserDTO> changeAvatar(int index, Authentication authentication){
-        String username = authentication.getName();
-        User user = userRepository.findByName(username).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         String updatedAvatarUrl = utils.getAvatarUrl(index);
         user.setAvatarUrl(updatedAvatarUrl);
         userRepository.save(user);
@@ -57,8 +57,8 @@ public class UserService {
 
     @Transactional
     public ResponseEntity<UserDTO> changeElo(int value, Authentication authentication){
-        String username = authentication.getName();
-        User user = userRepository.findByName(username).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         user.setElo(value);
         userRepository.save(user);
         return ResponseEntity.ok(mapper.UserEntityToDTO(user));

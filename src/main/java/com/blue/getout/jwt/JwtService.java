@@ -17,9 +17,9 @@ public class JwtService {
     private final JwtEncoder jwtEncoder;
     private final JwtDecoder jwtDecoder;
 
-    public String generateToken(final String username) {
+    public String generateToken(final String email) {
         final JwtClaimsSet claimsSet = JwtClaimsSet.builder()
-                .subject(username)
+                .subject(email)
                 .issuer(issuer)
                 .expiresAt(Instant.now().plus(ttl))
                 .build();
@@ -28,9 +28,9 @@ public class JwtService {
                 .getTokenValue();
     }
 
-    public String generateRefreshToken(final String username) {
+    public String generateRefreshToken(final String email) {
         final JwtClaimsSet claimsSet = JwtClaimsSet.builder()
-                .subject(username)
+                .subject(email)
                 .issuer(issuer)
                 .expiresAt(Date.from(Instant.now().plus(30, ChronoUnit.DAYS)).toInstant())
                 .build();
@@ -39,12 +39,12 @@ public class JwtService {
                 .getTokenValue();
     }
 
-    public boolean isTokenValid(String token, String username) {
+    public boolean isTokenValid(String token, String email) {
         try {
             Jwt jwt = jwtDecoder.decode(token);
-            String tokenUsername = jwt.getSubject();
+            String tokenEmail = jwt.getSubject();
             Instant expiresAt = jwt.getExpiresAt();
-            if (!tokenUsername.equals(username)) return false;
+            if (!tokenEmail.equals(email)) return false;
             assert expiresAt != null;
             return expiresAt.isAfter(Instant.now());
         } catch (JwtException e) {
@@ -52,10 +52,10 @@ public class JwtService {
         }
     }
 
-    public String extractUsername(String token){
+    public String extractEmail(String token){
         try {
             Jwt jwt = jwtDecoder.decode(token);
-            return jwt.getSubject(); // This is typically the username
+            return jwt.getSubject();
         } catch (JwtException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token", e);
         }

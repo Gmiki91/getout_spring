@@ -13,14 +13,14 @@ public class JpaUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(final String username)
+    public UserDetails loadUserByUsername(final String email)
             throws UsernameNotFoundException {
 
-        return userRepository.findByName(username).map(user ->
+        return userRepository.findByEmail(email).map(user ->
                 User.builder()
-                        .username(username)
+                        .username(user.getEmail())
                         .password(user.getPassword())
                         .build()
-        ).orElseThrow(() -> new UsernameNotFoundException("User with username [%s] not found".formatted(username)));
+        ).orElseThrow(() -> new UsernameNotFoundException("User with email [%s] not found".formatted(email)));
     }
 }
