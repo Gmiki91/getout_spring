@@ -10,11 +10,12 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 @CrossOrigin
 @RepositoryRestResource(path = "tokens")
 public interface VerificationTokenRepository extends JpaRepository<VerificationToken,Long> {
     Optional<VerificationToken> findByToken(String token);
-    void deleteByUser(User user);
+    void deleteByUserId(UUID userId);
 
     @Query("SELECT t FROM VerificationToken t WHERE t.expiryDate < :now ")
     List<VerificationToken> findExpiredTokens(@Param("now") LocalDateTime now);

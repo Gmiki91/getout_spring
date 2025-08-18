@@ -82,6 +82,7 @@ public class AuthService {
         return ResponseEntity.ok(new MessageResponse("Email confirmed"));
     }
 
+    @Transactional
     public ResponseEntity<MessageResponse> resendConfirmation(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -91,8 +92,8 @@ public class AuthService {
         }
 
         // Invalidate existing tokens
-        tokenRepository.deleteByUser(user);
-
+        tokenRepository.deleteByUserId(user.getId());
+        tokenRepository.flush();
         // Create new token
         String token = UUID.randomUUID().toString();
         VerificationToken newToken = new VerificationToken(token, user, LocalDateTime.now().plusHours(24));
