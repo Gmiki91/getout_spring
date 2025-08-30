@@ -22,11 +22,15 @@ public class VerificationToken {
         @OneToOne
         private  User user;
 
+        @Enumerated(EnumType.STRING)
+        private TokenType type;
+
         private  LocalDateTime expiryDate;
 
-        public VerificationToken(String token, User user, LocalDateTime expiryDate) {
+        public VerificationToken(String token, User user, TokenType type, LocalDateTime expiryDate) {
                 this.token = token;
                 this.user = user;
+                this.type=type;
                 this.expiryDate = expiryDate;
         }
     }

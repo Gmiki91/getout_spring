@@ -4,7 +4,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -24,6 +23,16 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<MessageResponse> registerUser(@Valid @RequestBody final RegistrationRequestDTO registrationDTO, HttpServletResponse response) {
        return authService.register(registrationDTO, response);
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<MessageResponse> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        return this.authService.forgotPassword(request);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+        return this.authService.resetPassword(request);
     }
 
     @PostMapping("/change-password")

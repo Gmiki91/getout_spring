@@ -30,6 +30,7 @@ import org.springframework.mail.SimpleMailMessage;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -60,25 +61,15 @@ public class AuthService {
         user.setEmailVerified(false);
         userRepository.save(user);
 
-        String token = UUID.randomUUID().toString();
-        VerificationToken verificationToken = new VerificationToken(token, user, LocalDateTime.now().plusHours(24));
-        tokenRepository.save(verificationToken);
-        return sendEmail(user.getEmail(), token);
+        String token = generateVerificationToken(user,TokenType.EMAIL_VERIFICATION);
+
+        return sendEmailToConfirm(user.getEmail(), token);
     }
 
     public ResponseEntity<MessageResponse> confirmEmail(String token) {
-        VerificationToken vToken = tokenRepository.findByToken(token)
-                .orElseThrow(() -> new RuntimeException("Invalid token"));
-
-        if (vToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("Token expired");
-        }
-
-        User user = vToken.getUser();
+        User user = validateToken(token, TokenType.EMAIL_VERIFICATION);
         user.setEmailVerified(true);
         userRepository.save(user);
-        tokenRepository.delete(vToken);
-
         return ResponseEntity.ok(new MessageResponse("Email confirmed"));
     }
 
@@ -95,12 +86,9 @@ public class AuthService {
         tokenRepository.deleteByUserId(user.getId());
         tokenRepository.flush();
         // Create new token
-        String token = UUID.randomUUID().toString();
-        VerificationToken newToken = new VerificationToken(token, user, LocalDateTime.now().plusHours(24));
-        tokenRepository.save(newToken);
-
+        String token = generateVerificationToken(user,TokenType.EMAIL_VERIFICATION);
         // Send confirmation email
-        return sendEmail(user.getEmail(), token);
+        return sendEmailToConfirm(user.getEmail(), token);
     }
 
     public ResponseEntity<AuthenticatedUserDTO> login(AuthenticationRequestDTO request, HttpServletResponse response) {
@@ -124,6 +112,22 @@ public class AuthService {
         } catch (AuthenticationException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password", e);
         }
+    }
+
+    public ResponseEntity<MessageResponse> forgotPassword(ForgotPasswordRequest request){
+        Optional<User> user = userRepository.findByEmail(request.email());
+        if (user.isPresent()) {
+            String token = generateVerificationToken(user.get(),TokenType.PASSWORD_RESET);
+            return sendEmailToResetPassword(user.get().getEmail(), token);
+        }
+        return ResponseEntity.ok(new MessageResponse("If this email exists, a reset link has been sent."));
+    }
+    public ResponseEntity<MessageResponse> resetPassword(ResetPasswordRequest request){
+        User user = validateToken(request.token(), TokenType.PASSWORD_RESET);
+        user.setPassword(passwordEncoder.encode((request.password())));
+        userRepository.save(user);
+
+        return ResponseEntity.ok(new MessageResponse("Password changed"));
     }
 
     public ResponseEntity<AuthenticatedUserDTO> getMe(final String email, HttpServletResponse response) {
@@ -158,13 +162,27 @@ public class AuthService {
         return getUserWithToken(email, refreshToken);
     }
 
-    private ResponseEntity<MessageResponse> sendEmail(String to, String token) {
+    private ResponseEntity<MessageResponse> sendEmailToConfirm(String to, String token) {
         try {
             String url = "https://signsign.azurewebsites.net/confirm-email?token=" + token;
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(to);
             message.setSubject("Confirm your email");
             message.setText("Click the link to confirm your email: " + url);
+            mailSender.send(message);
+            return ResponseEntity.ok(new MessageResponse("Email sent successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MessageResponse("Failed to send email: " + e.getMessage()));
+        }
+    }
+
+    private ResponseEntity<MessageResponse> sendEmailToResetPassword(String to, String token) {
+        try {
+            String url = "https://signsign.azurewebsites.net/reset-password?token=" + token;
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(to);
+            message.setSubject("Reset your password");
+            message.setText("Click the link to reset your password: " + url);
             mailSender.send(message);
             return ResponseEntity.ok(new MessageResponse("Email sent successfully"));
         } catch (Exception e) {
@@ -187,6 +205,13 @@ public class AuthService {
         return ResponseEntity.ok(response);
     }
 
+    private String generateVerificationToken(User user, TokenType type){
+        String token = UUID.randomUUID().toString();
+        VerificationToken verificationToken = new VerificationToken(token, user,type, LocalDateTime.now().plusHours(24));
+        tokenRepository.save(verificationToken);
+        return token;
+    }
+
     private String generateRefreshToken(String email, HttpServletResponse response) {
         String refreshToken = jwtService.generateRefreshToken(email);
         addRefreshTokenToCookie(response, refreshToken);
@@ -203,6 +228,23 @@ public class AuthService {
             }
         }
         return null;
+    }
+
+    public User validateToken(String token, TokenType expectedType) {
+        VerificationToken vToken = tokenRepository.findByToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid token"));
+
+        if (vToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Token expired");
+        }
+
+        if (vToken.getType() != expectedType) {
+            throw new RuntimeException("Invalid token type");
+        }
+
+        User user = vToken.getUser();
+        tokenRepository.delete(vToken);
+        return user;
     }
 
     private void addRefreshTokenToCookie(HttpServletResponse response, String refreshToken) {
