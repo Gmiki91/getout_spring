@@ -3,19 +3,24 @@ package com.blue.getout.notification;
 import com.blue.getout.event.Event;
 import com.blue.getout.event.UpdateType;
 import com.blue.getout.user.User;
+import com.blue.getout.userevent.UserEvent;
+import com.blue.getout.userevent.UserEventRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class NotificationService {
     private final NotificationRepository notificationRepository;
+    private final UserEventRepository userEventRepository;
 
-    public NotificationService(NotificationRepository notificationRepository) {
+    public NotificationService(NotificationRepository notificationRepository,UserEventRepository userEventRepository) {
         this.notificationRepository = notificationRepository;
+        this.userEventRepository=userEventRepository;
     }
     public void deleteNotifications(UUID eventId){
         this.notificationRepository.deleteByEventId(eventId);
@@ -55,11 +60,11 @@ public class NotificationService {
         });
     }
 
-    @Transactional
-    public void subscribeToEvent(Event event, User user){
-        Notification notification = createNotification(event,user);
-        user.getJoinedEvents().add(event);
-    }
+//    @Transactional
+//    public void subscribeToEvent(Event event, User user){
+//        Notification notification = createNotification(event,user);
+//        user.getJoinedEvents().add(event);
+//    }
 
     @Transactional
     public void unsubscribeFromEvent(Event event, User user) {
@@ -67,15 +72,18 @@ public class NotificationService {
         notificationRepository.deleteByEventAndUser(event, user);
     }
 
-    private Set<Notification> createNotifications(Event event) {
+    public Set<Notification> createNotifications(Event event) {
+        List<UserEvent> participants = userEventRepository.findByEvent(event);
+
         Set<Notification> notifications = new HashSet<>();
-        event.getParticipants().forEach(user -> {
-            Notification notification = this.createNotification(event,user);
+        for (UserEvent ue : participants) {
+            Notification notification = createNotification(event, ue.getUser());
             notifications.add(notification);
-        });
+        }
         return notifications;
     }
 
+    @Transactional
     public Notification createNotification(Event event, User user){
         Notification notification = new Notification();
         notification.setEvent(event);

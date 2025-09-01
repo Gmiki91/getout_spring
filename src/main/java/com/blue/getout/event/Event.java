@@ -3,6 +3,7 @@ package com.blue.getout.event;
 import com.blue.getout.comment.Comment;
 import com.blue.getout.notification.Notification;
 import com.blue.getout.user.User;
+import com.blue.getout.userevent.UserEvent;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -52,9 +53,9 @@ public class Event {
     @JsonIgnore
     private Set<Notification> notifications = new HashSet<>();
 
-    @ManyToMany(mappedBy = "joinedEvents")
-    @JsonBackReference("user-participants")
-    private Set<User> participants;
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserEvent> participants;
 
     @Column(name = "info")
     private String info;
@@ -71,7 +72,7 @@ public class Event {
         this.id = UUID.randomUUID();
     }
 
-    public Event(String title, String location,LatLng latLng, ZonedDateTime time, ZonedDateTime endTime,int min, int max, Set<User> participants, String info,String recurring,User owner) {
+    public Event(String title, String location,LatLng latLng, ZonedDateTime time, ZonedDateTime endTime,int min, int max, String info,String recurring,User owner) {
         this.id = UUID.randomUUID();
         this.title = title;
         this.location = location;
@@ -80,7 +81,7 @@ public class Event {
         this.endTime = endTime;
         this.min = min;
         this.max = max;
-        this.participants = participants;
+        this.participants =  new HashSet<>();;
         this.info = info;
         this.recurring = recurring;
         this.owner = owner;

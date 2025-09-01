@@ -1,6 +1,7 @@
 package com.blue.getout.event;
 
 import com.blue.getout.notification.NotificationService;
+import com.blue.getout.userevent.UserEventRepository;
 import com.blue.getout.utils.Mapper;
 import com.blue.getout.utils.Utils;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,12 +17,14 @@ import java.util.stream.Collectors;
 @Service
 public class EventService {
     private final EventRepository eventRepository;
+    private final UserEventRepository userEventRepository;
     private final NotificationService notificationService;
     private final Mapper mapper;
     private final Utils utils;
 
-    public EventService(EventRepository eventRepository, NotificationService notificationService, Mapper mapper,Utils utils) {
+    public EventService(EventRepository eventRepository,UserEventRepository userEventRepository, NotificationService notificationService, Mapper mapper,Utils utils) {
         this.eventRepository = eventRepository;
+        this.userEventRepository=userEventRepository;
         this.notificationService = notificationService;
         this.mapper = mapper;
         this.utils=utils;
@@ -29,13 +32,19 @@ public class EventService {
 
     public List<EventDTO> getEventsForUser(UUID userId) {
         List<Event> allEvents = eventRepository.findAll(Sort.by(Sort.Direction.ASC, "time"));
-        Set<UUID> joinedEventIds = eventRepository.findEventsJoinedByUser(userId)
+        Set<UUID> joinedEventIds = userEventRepository.findByUserId(userId)
                 .stream()
-                .map(Event::getId)
+                .map(ue -> ue.getEvent().getId())
                 .collect(Collectors.toSet());
 
+        Map<UUID, Long> boardCountMap = userEventRepository.countBoardsForEvents(allEvents).stream()
+                .collect(Collectors.toMap(
+                        row -> (UUID) row[0],
+                        row -> (Long) row[1]
+                ));
+
         return allEvents.stream()
-                .map(event -> mapper.EventEntityToDTO(event, joinedEventIds.contains(event.getId())))
+                .map(event -> mapper.EventEntityToDTO(event, joinedEventIds.contains(event.getId()),boardCountMap.getOrDefault(event.getId(), 0L)))
                 .toList();
     }
 
