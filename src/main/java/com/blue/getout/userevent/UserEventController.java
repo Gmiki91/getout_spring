@@ -21,11 +21,11 @@ public class UserEventController {
     }
     @PostMapping("/{userId}/join/{eventId}")
     public  ResponseEntity<EventDTO> joinEvent(@PathVariable UUID userId, @PathVariable UUID eventId) {
-       return userEventService.modifyEventParticipation(eventId,userId,true);
+       return userEventService.joinEvent(eventId,userId);
     }
     @DeleteMapping("/{eventId}/participants/{userId}")
     public ResponseEntity<EventDTO> leaveEvent(@PathVariable UUID eventId, @PathVariable UUID userId){
-        return userEventService.modifyEventParticipation(eventId,userId,false);
+        return userEventService.leaveEvent(eventId,userId);
     }
     @DeleteMapping("/events/{eventId}")
     public void deleteEvent(@PathVariable UUID eventId){

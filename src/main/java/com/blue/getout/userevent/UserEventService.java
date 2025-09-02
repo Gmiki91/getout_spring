@@ -55,38 +55,43 @@ public class UserEventService {
     }
 
     @Transactional
-    public ResponseEntity<EventDTO> modifyEventParticipation(UUID eventId, UUID userId, boolean isJoining) {
+    public ResponseEntity<EventDTO> joinEvent(UUID eventId, UUID userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         Event event = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
-
-        // check capacity
-        if (isJoining && event.getMax() != 0 && userEventRepository.countByEvent(event) >= event.getMax()) {
+        if (event.getMax() != 0 && userEventRepository.countByEvent(event) >= event.getMax()) {
             throw new IllegalArgumentException("The list is full.");
         }
-
-        if (isJoining) {
-            // create link only if not already present
-            UserEventId id = new UserEventId(userId, eventId);
-            if (userEventRepository.existsById(id)) {
-                throw new IllegalArgumentException("Already joined.");
-            }
-
-            UserEvent link = new UserEvent();
-            link.setId(id);
-            link.setUser(user);
-            link.setEvent(event);
-
-            userEventRepository.save(link);
-
-            notificationService.createNotification(event, user);
-
-        } else {
-            userEventRepository.deleteByUserIdAndEventId(userId, eventId);
-            notificationService.unsubscribeFromEvent(event, user);
+        UserEventId id = new UserEventId(userId, eventId);
+        if (userEventRepository.existsById(id)) {
+            throw new IllegalArgumentException("Already joined.");
         }
-        //if user just joined, they couldnt add a board yet. If they left, we might need to decrease boardcount
-        int boardCount = isJoining ? 0 :  userEventRepository.countByEventAndBringingBoardTrue(event);
-        EventDTO eventDTO = mapper.EventEntityToDTO(event, isJoining,boardCount);
+
+        UserEvent link = new UserEvent();
+        link.setId(id);
+        link.setUser(user);
+        link.setEvent(event);
+        event.getParticipants().add(link);
+
+        notificationService.createNotification(event, user);
+
+        Event updated = eventRepository.findById(event.getId())
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+        //if user just joined, they couldnt have added a board yet.
+        EventDTO eventDTO = mapper.EventEntityToDTO(updated, true,0);
+        return ResponseEntity.ok(eventDTO);
+    }
+
+    @Transactional
+    public ResponseEntity<EventDTO> leaveEvent(UUID eventId, UUID userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
+        userEventRepository.deleteByUserIdAndEventId(userId, eventId);
+        notificationService.unsubscribeFromEvent(event, user);
+
+        int boardCount =  userEventRepository.countByEventAndBringingBoardTrue(event);
+        Event updated = eventRepository.findById(event.getId())
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+        EventDTO eventDTO = mapper.EventEntityToDTO(updated, false,boardCount);
         return ResponseEntity.ok(eventDTO);
     }
 
