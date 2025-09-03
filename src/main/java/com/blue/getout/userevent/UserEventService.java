@@ -39,18 +39,21 @@ public class UserEventService {
     public ResponseEntity<EventDTO> createEventWithUserId(EventDTO eventData) {
         User user = userRepository.findById(eventData.ownerId()).orElseThrow(() -> new RuntimeException("User not found"));
         Event event = mapper.EventDTOToEntity(eventData, user);
-        eventRepository.save(event);
 
         // Create UserEvent link for the owner
         UserEvent userEvent = new UserEvent();
         userEvent.setId(new UserEventId(user.getId(), event.getId()));
         userEvent.setUser(user);
         userEvent.setEvent(event);
-        userEventRepository.save(userEvent);
+
+        event.getParticipants().add(userEvent);
+        eventRepository.save(event);
 
         notificationService.createNotification(event,user);
-        userRepository.save(user);
-        EventDTO eventDTO = mapper.EventEntityToDTO(event);
+
+        Event updated = eventRepository.findById(event.getId())
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+        EventDTO eventDTO = mapper.EventEntityToDTO(updated,true,0);
         return ResponseEntity.status(HttpStatus.CREATED).body(eventDTO);
     }
 
@@ -95,13 +98,13 @@ public class UserEventService {
         return ResponseEntity.ok(eventDTO);
     }
 
-    @Transactional
-    public void toggleBringingBoard(UUID eventId, UUID userId, boolean bringingBoard) {
-        UserEvent userEvent = userEventRepository.findByUserIdAndEventId(userId, eventId)
-                .orElseThrow(() -> new ResourceNotFoundException("Participation not found"));
-        userEvent.setBringingBoard(bringingBoard);
-        userEventRepository.save(userEvent);
-    }
+//    @Transactional
+//    public void toggleBringingBoard(UUID eventId, UUID userId, boolean bringingBoard) {
+//        UserEvent userEvent = userEventRepository.findByUserIdAndEventId(userId, eventId)
+//                .orElseThrow(() -> new ResourceNotFoundException("Participation not found"));
+//        userEvent.setBringingBoard(bringingBoard);
+//        userEventRepository.save(userEvent);
+//    }
 
     @Transactional
     public void deleteEvent(UUID eventId) {
